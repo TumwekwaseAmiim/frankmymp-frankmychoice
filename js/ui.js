@@ -3,22 +3,31 @@
    #FrankMyMP #FrankMyChoice
    PUBLIC INTERFACE UTILITIES
 
-   News Cards
-   Complete Photographs
-   Article Links
-   Detailed WhatsApp Sharing
-   Native Sharing
-   Mobile Navigation
-   Date Formatting
-   Comments and Article Helpers
+   Features:
+   - Public news cards
+   - Full article links
+   - Original uploaded photographs
+   - Share NEWS Card as actual JPEG file
+   - Share Link with extended article text
+   - Native mobile sharing
+   - WhatsApp sharing fallback
+   - Download NEWS Card fallback
+   - Copy article caption
+   - Mobile navigation
+   - Date formatting
+   - Article paragraph utilities
+
+   Eng. Amiim Tumwekwase
 ===================================================== */
 
 // ==========================================
 // DOM HELPERS
 // ==========================================
 
-export const $ = (selector, root = document) =>
-  root.querySelector(selector);
+export const $ = (
+  selector,
+  root = document
+) => root.querySelector(selector);
 
 export function el(
   tag,
@@ -31,7 +40,10 @@ export function el(
     node.className = className;
   }
 
-  if (text !== null && text !== undefined) {
+  if (
+    text !== null &&
+    text !== undefined
+  ) {
     node.textContent = String(text);
   }
 
@@ -47,12 +59,19 @@ const PUBLIC_SITE_URL =
 
 const SHARE_SUMMARY_LENGTH = 500;
 
+// Must match tools/build.mjs.
+const SHARE_DESIGN_VERSION = "photo70-v2";
+
+// ==========================================
+// LOCAL DEVELOPMENT
+// ==========================================
+
 function isLocalDevelopment() {
-  return (
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname === "0.0.0.0"
-  );
+  return [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0"
+  ].includes(window.location.hostname);
 }
 
 // ==========================================
@@ -70,15 +89,24 @@ export const fmtDate = value => {
           : new Date()
     );
 
-  return date.toLocaleDateString("en-UG", {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
+  const safeDate =
+    date instanceof Date &&
+    !Number.isNaN(date.getTime())
+      ? date
+      : new Date();
+
+  return safeDate.toLocaleDateString(
+    "en-UG",
+    {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    }
+  );
 };
 
 // ==========================================
-// NEWS PHOTOGRAPHS
+// ORIGINAL ARTICLE PHOTOGRAPHS
 // ==========================================
 
 export function imageOf(post) {
@@ -91,8 +119,8 @@ export function imageOf(post) {
       typeof item === "string"
         ? item
         : (
-            item?.url ||
             item?.secure_url ||
+            item?.url ||
             item?.src ||
             ""
           );
@@ -113,11 +141,15 @@ export function imageOf(post) {
 // ==========================================
 
 function articleIdentifier(post) {
-  return post?.id || post?.slug || "";
+  return String(
+    post?.id ||
+    post?.slug ||
+    ""
+  ).trim();
 }
 
 // ==========================================
-// ARTICLE LINK GENERATION
+// ARTICLE PAGE LINK
 // ==========================================
 
 export function articleUrl(post) {
@@ -127,16 +159,12 @@ export function articleUrl(post) {
     return "/";
   }
 
-  // Local VS Code Live Server.
-
   if (isLocalDevelopment()) {
     return (
       "/post.html?slug=" +
       encodeURIComponent(identifier)
     );
   }
-
-  // Cloudflare-generated article page.
 
   return (
     "/post/" +
@@ -146,7 +174,7 @@ export function articleUrl(post) {
 }
 
 // ==========================================
-// PUBLIC ARTICLE SHARING URL
+// PUBLIC ABSOLUTE ARTICLE URL
 // ==========================================
 
 export function publicArticleUrl(post) {
@@ -165,10 +193,20 @@ export function publicArticleUrl(post) {
 }
 
 // ==========================================
-// PREPARE ARTICLE SUMMARY FOR SHARING
-//
-// Uses actual saved article content.
-// Never invents or adds article information.
+// CLEAN ARTICLE TEXT FOR SHARING
+// ==========================================
+
+function cleanShareText(value) {
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+// ==========================================
+// ARTICLE SUMMARY FOR WHATSAPP
 // ==========================================
 
 export function shareSummary(
@@ -181,10 +219,7 @@ export function shareSummary(
     post?.summary ||
     "";
 
-  const cleaned = String(source)
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const cleaned = cleanShareText(source);
 
   if (!cleaned) {
     return "";
@@ -194,19 +229,28 @@ export function shareSummary(
     return cleaned;
   }
 
-  const shortened = cleaned
-    .slice(0, maxLength - 1)
-    .replace(/\s+\S*$/, "")
-    .trim();
-
-  return (
-    (shortened || cleaned.slice(0, maxLength - 1)) +
-    "…"
+  const limit = Math.max(
+    1,
+    maxLength - 1
   );
+
+  const cut = cleaned.slice(0, limit);
+
+  const lastSpace = Math.max(
+    cut.lastIndexOf(" "),
+    cut.lastIndexOf("\n")
+  );
+
+  const shortened =
+    lastSpace > limit * 0.6
+      ? cut.slice(0, lastSpace).trim()
+      : cut.trim();
+
+  return shortened + "…";
 }
 
 // ==========================================
-// PREPARE COMPLETE SHARE MESSAGE
+// COMPLETE ARTICLE SHARING MESSAGE
 // ==========================================
 
 export function shareMessage(
@@ -214,9 +258,11 @@ export function shareMessage(
   title = "",
   articleText = ""
 ) {
-  const headline = String(title || "").trim();
+  const headline =
+    String(title || "").trim();
 
-  const summary = String(articleText || "").trim();
+  const summary =
+    cleanShareText(articleText);
 
   const sections = [
     "📰 #FrankMyMP #FrankMyChoice | NEWS UPDATE"
@@ -238,21 +284,13 @@ export function shareMessage(
 }
 
 // ==========================================
-// SHARE ARTICLE
+// SHARE LINK
 //
-// Native Share API on phones.
-// WhatsApp fallback on desktops.
-// Clipboard fallback if needed.
+// Shares longer article text and URL.
 //
-// The article URL still points to the
-// same branded Cloudflare landing page.
+// The article URL contains the original
+// server-generated Open Graph preview.
 //
-// WhatsApp automatically reads its:
-// og:title
-// og:description
-// og:image
-//
-// WhatsApp controls preview display.
 // ==========================================
 
 export async function share(
@@ -260,80 +298,316 @@ export async function share(
   title = "",
   articleText = ""
 ) {
-  if (!url) return;
+  if (!url) {
+    return;
+  }
 
-  const completeMessage = shareMessage(
+  const text = shareMessage(
     url,
     title,
     articleText
   );
 
-  // ======================================
-  // MOBILE / NATIVE SHARE
-  // ======================================
+  // Native mobile Share API.
 
   if (
     typeof navigator.share === "function"
   ) {
     try {
       await navigator.share({
-        text: completeMessage
+        text
       });
 
       return;
-
     } catch (error) {
-      if (
-        error?.name === "AbortError"
-      ) {
+      if (error?.name === "AbortError") {
         return;
       }
 
       console.warn(
-        "Native sharing unavailable:",
+        "Native link sharing failed:",
         error
       );
     }
   }
 
-  // ======================================
-  // WHATSAPP SHARE FALLBACK
-  // ======================================
+  // WhatsApp link sharing.
 
-  const whatsAppURL =
+  const whatsappURL =
     "https://wa.me/?text=" +
-    encodeURIComponent(
-      completeMessage
-    );
+    encodeURIComponent(text);
 
-  const opened = window.open(
-    whatsAppURL,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  // Navigate rather than rely on a popup
+  // that browsers may block.
 
-  if (opened !== null) {
-    return;
+  window.location.href = whatsappURL;
+}
+
+// ==========================================
+// BRANDED NEWS IMAGE URL
+//
+// Matches the current tools/build.mjs:
+//
+// /assets/share/POST_ID-photo70-v2.jpg
+//
+// ==========================================
+
+export function newsCardUrl(post) {
+  const identifier = articleIdentifier(post);
+
+  if (!identifier) {
+    return "";
   }
 
-  // ======================================
-  // COPY MESSAGE IF POPUP BLOCKED
-  // ======================================
+  return (
+    PUBLIC_SITE_URL +
+    "/assets/share/" +
+    encodeURIComponent(
+      identifier +
+      "-" +
+      SHARE_DESIGN_VERSION +
+      ".jpg"
+    )
+  );
+}
+
+// ==========================================
+// COPY TEXT
+// ==========================================
+
+async function copyText(value) {
+  if (!value) {
+    return false;
+  }
 
   try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error(
+        "Clipboard unavailable"
+      );
+    }
+
     await navigator.clipboard.writeText(
-      completeMessage
+      value
     );
 
-    alert(
-      "News headline, article summary and link copied. You can paste them into WhatsApp."
-    );
+    return true;
 
   } catch (error) {
     window.prompt(
-      "Copy this news article:",
-      completeMessage
+      "Copy this article text:",
+      value
     );
+
+    return false;
+  }
+}
+
+// ==========================================
+// DOWNLOAD IMAGE FILE
+// ==========================================
+
+function downloadNewsImage(
+  imageURL,
+  filename
+) {
+  const link = document.createElement("a");
+
+  link.href = imageURL;
+  link.download = filename;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
+// ==========================================
+// SHARE ACTUAL NEWS IMAGE
+//
+// Device behavior:
+//
+// 1. Download published branded JPEG.
+//
+// 2. Convert it to a File object.
+//
+// 3. Check whether native file sharing
+//    is supported.
+//
+// 4. If supported, pass JPEG + caption
+//    to the device's share menu.
+//
+// 5. If unsupported, provide the image
+//    and caption for manual sharing.
+//
+// Important:
+// Apps such as WhatsApp may choose to
+// omit text supplied with an image file.
+// That is controlled by the receiving app.
+//
+// ==========================================
+
+export async function shareNewsCard(
+  post
+) {
+  const identifier = articleIdentifier(post);
+
+  if (!identifier) {
+    alert(
+      "This news article does not have a valid link."
+    );
+
+    return;
+  }
+
+  const imageURL = newsCardUrl(post);
+
+  const articleLink = publicArticleUrl(post);
+
+  const title =
+    post?.title || "News Update";
+
+  const summary = shareSummary(
+    post,
+    SHARE_SUMMARY_LENGTH
+  );
+
+  const caption = shareMessage(
+    articleLink,
+    title,
+    summary
+  );
+
+  const filename =
+    "FrankNews-" +
+    identifier +
+    ".jpg";
+
+  try {
+    // Fetch the generated image.
+    // We only use the official published URL.
+
+    const response = await fetch(
+      imageURL,
+      {
+        mode: "cors",
+        cache: "no-cache"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "NEWS image unavailable: HTTP " +
+        response.status
+      );
+    }
+
+    const type = (
+      response.headers.get("content-type") || ""
+    ).toLowerCase();
+
+    if (!type.includes("image/jpeg")) {
+      throw new Error(
+        "Published NEWS card is not a JPEG image"
+      );
+    }
+
+    const blob = await response.blob();
+
+    if (!blob.size) {
+      throw new Error(
+        "The NEWS image is empty"
+      );
+    }
+
+    const file = new File(
+      [blob],
+      filename,
+      {
+        type: "image/jpeg"
+      }
+    );
+
+    // Check native file sharing.
+
+    const canShareFile =
+      typeof navigator.share === "function" &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({
+        files: [file]
+      });
+
+    if (canShareFile) {
+      try {
+        // Some receiving apps preserve
+        // caption + URL; others omit them.
+
+        await navigator.share({
+          files: [file],
+          text: caption
+        });
+
+        return;
+
+      } catch (error) {
+        if (
+          error?.name === "AbortError"
+        ) {
+          return;
+        }
+
+        console.warn(
+          "NEWS card native sharing failed:",
+          error
+        );
+      }
+    }
+
+    // ======================================
+    // FALLBACK FOR UNSUPPORTED DEVICES
+    // ======================================
+
+    // First copy the caption so the reader
+    // can paste it into WhatsApp.
+
+    const copied = await copyText(
+      caption
+    );
+
+    // Then initiate the image download.
+
+    downloadNewsImage(
+      imageURL,
+      filename
+    );
+
+    alert(
+      copied
+        ? "NEWS card opened for saving and article caption copied. Share the image in WhatsApp, then paste the caption."
+        : "NEWS card opened for saving. Share it in WhatsApp and copy the article text from the prompt."
+    );
+
+  } catch (error) {
+    console.warn(
+      "NEWS card sharing unavailable:",
+      error
+    );
+
+    // If the branded image is not available,
+    // preserve the working link-sharing route.
+
+    const useLink = window.confirm(
+      "The NEWS image is not available yet. Share the article text and link instead?"
+    );
+
+    if (useLink) {
+      await share(
+        articleLink,
+        title,
+        summary
+      );
+    }
   }
 }
 
@@ -365,13 +639,12 @@ export function card(
 
   link.setAttribute(
     "aria-label",
-    "Read: " + (
-      post.title || "News article"
-    )
+    "Read: " +
+      (post.title || "News article")
   );
 
   // ======================================
-  // NEWS PHOTOGRAPH
+  // PHOTOGRAPH
   // ======================================
 
   const image = el(
@@ -380,18 +653,16 @@ export function card(
   );
 
   image.src = imageOf(post);
-
   image.alt =
     post.title || "News photograph";
 
   image.loading = "lazy";
-
   image.decoding = "async";
 
   link.append(image);
 
   // ======================================
-  // ARTICLE DETAILS
+  // ARTICLE CONTENT
   // ======================================
 
   const body = el(
@@ -399,7 +670,7 @@ export function card(
     "card-body"
   );
 
-  // CATEGORY
+  // Category.
 
   const category =
     typeof post.category === "string"
@@ -419,7 +690,7 @@ export function card(
     );
   }
 
-  // HEADLINE
+  // Headline.
 
   body.append(
     el(
@@ -429,7 +700,7 @@ export function card(
     )
   );
 
-  // ARTICLE DESCRIPTION
+  // Description.
 
   if (post.excerpt) {
     body.append(
@@ -441,7 +712,7 @@ export function card(
     );
   }
 
-  // PUBLICATION DATE
+  // Publication date.
 
   body.append(
     el(
@@ -459,7 +730,7 @@ export function card(
   wrapper.append(link);
 
   // ======================================
-  // SHARE BUTTON
+  // SHARING BUTTON AREA
   // ======================================
 
   const shareArea = el(
@@ -467,41 +738,95 @@ export function card(
     "card-share-area"
   );
 
-  const shareButton = el(
+  shareArea.style.display = "flex";
+  shareArea.style.flexWrap = "wrap";
+  shareArea.style.gap = "8px";
+
+  // ======================================
+  // BUTTON 1: SHARE NEWS CARD
+  // ======================================
+
+  const cardButton = el(
     "button",
     "card-share-btn",
-    "↗ Share"
+    "🖼 Share NEWS Card"
   );
 
-  shareButton.type = "button";
+  cardButton.type = "button";
 
-  shareButton.setAttribute(
+  cardButton.setAttribute(
     "aria-label",
-    "Share " +
-    (
-      post.title || "this news article"
-    )
+    "Share NEWS photograph and article: " +
+      (post.title || "News")
   );
 
-  shareButton.addEventListener(
+  cardButton.addEventListener(
     "click",
     async event => {
       event.preventDefault();
-
       event.stopPropagation();
 
-      const url =
-        publicArticleUrl(post);
+      cardButton.disabled = true;
+
+      const previousText =
+        cardButton.textContent;
+
+      cardButton.textContent =
+        "Preparing NEWS Card…";
+
+      try {
+        await shareNewsCard(post);
+      } finally {
+        cardButton.disabled = false;
+
+        cardButton.textContent =
+          previousText;
+      }
+    }
+  );
+
+  // ======================================
+  // BUTTON 2: SHARE ARTICLE LINK
+  // ======================================
+
+  const linkButton = el(
+    "button",
+    "card-share-btn",
+    "↗ Share Link"
+  );
+
+  linkButton.type = "button";
+
+  linkButton.setAttribute(
+    "aria-label",
+    "Share article text and link: " +
+      (post.title || "News")
+  );
+
+  linkButton.style.background =
+    "transparent";
+
+  linkButton.style.border =
+    "1px solid #C91727";
+
+  linkButton.style.color =
+    "#C91727";
+
+  linkButton.addEventListener(
+    "click",
+    async event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const url = publicArticleUrl(post);
 
       const title =
-        post.title ||
-        "News Update";
+        post.title || "News Update";
 
-      const summary =
-        shareSummary(
-          post,
-          SHARE_SUMMARY_LENGTH
-        );
+      const summary = shareSummary(
+        post,
+        SHARE_SUMMARY_LENGTH
+      );
 
       await share(
         url,
@@ -512,12 +837,11 @@ export function card(
   );
 
   shareArea.append(
-    shareButton
+    cardButton,
+    linkButton
   );
 
-  wrapper.append(
-    shareArea
-  );
+  wrapper.append(shareArea);
 
   return wrapper;
 }
@@ -534,12 +858,12 @@ export function menu() {
   button?.addEventListener(
     "click",
     () => {
-      if (!nav) return;
+      if (!nav) {
+        return;
+      }
 
       const isOpen =
-        nav.classList.toggle(
-          "open"
-        );
+        nav.classList.toggle("open");
 
       button.setAttribute(
         "aria-expanded",
@@ -548,7 +872,7 @@ export function menu() {
     }
   );
 
-  // NRM EMBLEM
+  // NRM emblem.
 
   const logo = $("#nrmLogo");
 
@@ -584,7 +908,9 @@ export function message(
   node,
   text
 ) {
-  if (!node) return;
+  if (!node) {
+    return;
+  }
 
   node.replaceChildren(
     el(
@@ -607,19 +933,15 @@ export function paragraphs(
     text || ""
   ).split(/\n\s*\n/);
 
-  parts.forEach(
-    part => {
-      if (
-        part.trim()
-      ) {
-        container.append(
-          el(
-            "p",
-            "",
-            part.trim()
-          )
-        );
-      }
+  parts.forEach(part => {
+    if (part.trim()) {
+      container.append(
+        el(
+          "p",
+          "",
+          part.trim()
+        )
+      );
     }
-  );
+  });
 }

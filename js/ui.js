@@ -6,6 +6,7 @@
    News Cards
    Complete Photographs
    Article Links
+   Detailed WhatsApp Sharing
    Native Sharing
    Mobile Navigation
    Date Formatting
@@ -43,6 +44,8 @@ export function el(
 
 const PUBLIC_SITE_URL =
   "https://frankmymp-frankmychoice.pages.dev";
+
+const SHARE_SUMMARY_LENGTH = 500;
 
 function isLocalDevelopment() {
   return (
@@ -162,35 +165,127 @@ export function publicArticleUrl(post) {
 }
 
 // ==========================================
-// SHARE ARTICLE
-
-// IMPORTANT:
-// Share only the article URL.
+// PREPARE ARTICLE SUMMARY FOR SHARING
 //
-// The recipient's application retrieves:
+// Uses actual saved article content.
+// Never invents or adds article information.
+// ==========================================
+
+export function shareSummary(
+  post,
+  maxLength = SHARE_SUMMARY_LENGTH
+) {
+  const source =
+    post?.body ||
+    post?.excerpt ||
+    post?.summary ||
+    "";
+
+  const cleaned = String(source)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  if (cleaned.length <= maxLength) {
+    return cleaned;
+  }
+
+  const shortened = cleaned
+    .slice(0, maxLength - 1)
+    .replace(/\s+\S*$/, "")
+    .trim();
+
+  return (
+    (shortened || cleaned.slice(0, maxLength - 1)) +
+    "…"
+  );
+}
+
+// ==========================================
+// PREPARE COMPLETE SHARE MESSAGE
+// ==========================================
+
+export function shareMessage(
+  url,
+  title = "",
+  articleText = ""
+) {
+  const headline = String(title || "").trim();
+
+  const summary = String(articleText || "").trim();
+
+  const sections = [
+    "📰 #FrankMyMP #FrankMyChoice | NEWS UPDATE"
+  ];
+
+  if (headline) {
+    sections.push(headline);
+  }
+
+  if (summary) {
+    sections.push(summary);
+  }
+
+  sections.push(
+    "Read the full story:\n" + url
+  );
+
+  return sections.join("\n\n");
+}
+
+// ==========================================
+// SHARE ARTICLE
+//
+// Native Share API on phones.
+// WhatsApp fallback on desktops.
+// Clipboard fallback if needed.
+//
+// The article URL still points to the
+// same branded Cloudflare landing page.
+//
+// WhatsApp automatically reads its:
 // og:title
 // og:description
 // og:image
 //
-// from the server-generated article HTML.
-//
-// WhatsApp controls the final card layout.
+// WhatsApp controls preview display.
 // ==========================================
 
-export async function share(url, title = "") {
+export async function share(
+  url,
+  title = "",
+  articleText = ""
+) {
   if (!url) return;
 
-  // Native sharing on supported devices.
+  const completeMessage = shareMessage(
+    url,
+    title,
+    articleText
+  );
 
-  if (navigator.share) {
+  // ======================================
+  // MOBILE / NATIVE SHARE
+  // ======================================
+
+  if (
+    typeof navigator.share === "function"
+  ) {
     try {
       await navigator.share({
-        url
+        text: completeMessage
       });
 
       return;
+
     } catch (error) {
-      if (error.name === "AbortError") {
+      if (
+        error?.name === "AbortError"
+      ) {
         return;
       }
 
@@ -201,18 +296,43 @@ export async function share(url, title = "") {
     }
   }
 
-  // Clipboard fallback.
+  // ======================================
+  // WHATSAPP SHARE FALLBACK
+  // ======================================
+
+  const whatsAppURL =
+    "https://wa.me/?text=" +
+    encodeURIComponent(
+      completeMessage
+    );
+
+  const opened = window.open(
+    whatsAppURL,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+  if (opened !== null) {
+    return;
+  }
+
+  // ======================================
+  // COPY MESSAGE IF POPUP BLOCKED
+  // ======================================
 
   try {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(
+      completeMessage
+    );
 
     alert(
-      "News article link copied. You can now share it."
+      "News headline, article summary and link copied. You can paste them into WhatsApp."
     );
+
   } catch (error) {
     window.prompt(
-      "Copy this news article link:",
-      url
+      "Copy this news article:",
+      completeMessage
     );
   }
 }
@@ -221,7 +341,10 @@ export async function share(url, title = "") {
 // PUBLIC NEWS CARD
 // ==========================================
 
-export function card(post, compact = false) {
+export function card(
+  post,
+  compact = false
+) {
   const wrapper = el(
     "article",
     "card" + (compact ? " compact" : "")
@@ -233,23 +356,34 @@ export function card(post, compact = false) {
   // CLICKABLE ARTICLE CONTENT
   // ======================================
 
-  const link = el("a", "card-link");
+  const link = el(
+    "a",
+    "card-link"
+  );
 
   link.href = articleLink;
 
   link.setAttribute(
     "aria-label",
-    "Read: " + (post.title || "News article")
+    "Read: " + (
+      post.title || "News article"
+    )
   );
 
   // ======================================
   // NEWS PHOTOGRAPH
   // ======================================
 
-  const image = el("img", "card-cover");
+  const image = el(
+    "img",
+    "card-cover"
+  );
 
   image.src = imageOf(post);
-  image.alt = post.title || "News photograph";
+
+  image.alt =
+    post.title || "News photograph";
+
   image.loading = "lazy";
 
   image.decoding = "async";
@@ -260,7 +394,10 @@ export function card(post, compact = false) {
   // ARTICLE DETAILS
   // ======================================
 
-  const body = el("div", "card-body");
+  const body = el(
+    "div",
+    "card-body"
+  );
 
   // CATEGORY
 
@@ -274,7 +411,11 @@ export function card(post, compact = false) {
     category.toLowerCase() !== "none"
   ) {
     body.append(
-      el("div", "category", category)
+      el(
+        "div",
+        "category",
+        category
+      )
     );
   }
 
@@ -288,11 +429,15 @@ export function card(post, compact = false) {
     )
   );
 
-  // DESCRIPTION
+  // ARTICLE DESCRIPTION
 
   if (post.excerpt) {
     body.append(
-      el("p", "summary", post.excerpt)
+      el(
+        "p",
+        "summary",
+        post.excerpt
+      )
     );
   }
 
@@ -310,6 +455,7 @@ export function card(post, compact = false) {
   );
 
   link.append(body);
+
   wrapper.append(link);
 
   // ======================================
@@ -332,23 +478,46 @@ export function card(post, compact = false) {
   shareButton.setAttribute(
     "aria-label",
     "Share " +
-      (post.title || "this news article")
+    (
+      post.title || "this news article"
+    )
   );
 
   shareButton.addEventListener(
     "click",
     async event => {
       event.preventDefault();
+
       event.stopPropagation();
 
-      const url = publicArticleUrl(post);
+      const url =
+        publicArticleUrl(post);
 
-      await share(url);
+      const title =
+        post.title ||
+        "News Update";
+
+      const summary =
+        shareSummary(
+          post,
+          SHARE_SUMMARY_LENGTH
+        );
+
+      await share(
+        url,
+        title,
+        summary
+      );
     }
   );
 
-  shareArea.append(shareButton);
-  wrapper.append(shareArea);
+  shareArea.append(
+    shareButton
+  );
+
+  wrapper.append(
+    shareArea
+  );
 
   return wrapper;
 }
@@ -359,6 +528,7 @@ export function card(post, compact = false) {
 
 export function menu() {
   const button = $("#menuBtn");
+
   const nav = $("#nav");
 
   button?.addEventListener(
@@ -367,7 +537,9 @@ export function menu() {
       if (!nav) return;
 
       const isOpen =
-        nav.classList.toggle("open");
+        nav.classList.toggle(
+          "open"
+        );
 
       button.setAttribute(
         "aria-expanded",
@@ -382,18 +554,24 @@ export function menu() {
 
   if (logo) {
     logo.onload = () => {
-      logo.classList.remove("hidden");
+      logo.classList.remove(
+        "hidden"
+      );
     };
 
     logo.onerror = () => {
-      logo.classList.add("hidden");
+      logo.classList.add(
+        "hidden"
+      );
     };
 
     if (
       logo.complete &&
       logo.naturalWidth > 0
     ) {
-      logo.classList.remove("hidden");
+      logo.classList.remove(
+        "hidden"
+      );
     }
   }
 }
@@ -402,11 +580,18 @@ export function menu() {
 // EMPTY STATES
 // ==========================================
 
-export function message(node, text) {
+export function message(
+  node,
+  text
+) {
   if (!node) return;
 
   node.replaceChildren(
-    el("div", "empty", text)
+    el(
+      "div",
+      "empty",
+      text
+    )
   );
 }
 
@@ -418,14 +603,23 @@ export function paragraphs(
   container,
   text
 ) {
-  const parts = String(text || "")
-    .split(/\n\s*\n/);
+  const parts = String(
+    text || ""
+  ).split(/\n\s*\n/);
 
-  parts.forEach(part => {
-    if (part.trim()) {
-      container.append(
-        el("p", "", part.trim())
-      );
+  parts.forEach(
+    part => {
+      if (
+        part.trim()
+      ) {
+        container.append(
+          el(
+            "p",
+            "",
+            part.trim()
+          )
+        );
+      }
     }
-  });
+  );
 }

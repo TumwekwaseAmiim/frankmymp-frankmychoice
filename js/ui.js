@@ -3,21 +3,30 @@
    #FrankMyMP #FrankMyChoice
    PUBLIC INTERFACE UTILITIES
 
-   Features:
+   FINAL FULL-PHOTO SHARING EDITION
+
+   FEATURES
+   --------------------------------------------------
    - Public news cards
-   - Full article links
-   - Original uploaded photographs
-   - Share NEWS Card as actual JPEG file
-   - Share Link with extended article text
+   - Original article photographs
+   - Full article landing-page links
+   - Share actual branded NEWS JPEG
+   - Full clear photograph sharing
+   - No blurred duplicate photograph
+   - Approximately 500 characters of story text
+   - Clickable full-story URL
    - Native mobile sharing
-   - WhatsApp sharing fallback
-   - Download NEWS Card fallback
-   - Copy article caption
+   - WhatsApp link sharing
+   - Image download fallback
+   - Copy caption fallback
    - Mobile navigation
    - Date formatting
-   - Article paragraph utilities
+   - Article paragraph helpers
 
-   Eng. Amiim Tumwekwase
+   Compatible with:
+   tools/build.mjs DESIGN_VERSION = "fullphoto-v3"
+
+   Developer: Eng. Amiim Tumwekwase
 ===================================================== */
 
 // ==========================================
@@ -57,10 +66,12 @@ export function el(
 const PUBLIC_SITE_URL =
   "https://frankmymp-frankmychoice.pages.dev";
 
+// Length of article text shared in WhatsApp.
 const SHARE_SUMMARY_LENGTH = 500;
 
-// Must match tools/build.mjs.
-const SHARE_DESIGN_VERSION = "photo70-v2";
+// IMPORTANT:
+// This must match tools/build.mjs.
+const SHARE_DESIGN_VERSION = "fullphoto-v3";
 
 // ==========================================
 // LOCAL DEVELOPMENT
@@ -71,7 +82,9 @@ function isLocalDevelopment() {
     "localhost",
     "127.0.0.1",
     "0.0.0.0"
-  ].includes(window.location.hostname);
+  ].includes(
+    window.location.hostname
+  );
 }
 
 // ==========================================
@@ -106,7 +119,7 @@ export const fmtDate = value => {
 };
 
 // ==========================================
-// ORIGINAL ARTICLE PHOTOGRAPHS
+// ORIGINAL ARTICLE PHOTOGRAPH
 // ==========================================
 
 export function imageOf(post) {
@@ -149,11 +162,12 @@ function articleIdentifier(post) {
 }
 
 // ==========================================
-// ARTICLE PAGE LINK
+// LOCAL / PUBLIC ARTICLE LINK
 // ==========================================
 
 export function articleUrl(post) {
-  const identifier = articleIdentifier(post);
+  const identifier =
+    articleIdentifier(post);
 
   if (!identifier) {
     return "/";
@@ -174,11 +188,12 @@ export function articleUrl(post) {
 }
 
 // ==========================================
-// PUBLIC ABSOLUTE ARTICLE URL
+// ABSOLUTE PUBLIC ARTICLE LINK
 // ==========================================
 
 export function publicArticleUrl(post) {
-  const identifier = articleIdentifier(post);
+  const identifier =
+    articleIdentifier(post);
 
   if (!identifier) {
     return PUBLIC_SITE_URL + "/";
@@ -193,7 +208,7 @@ export function publicArticleUrl(post) {
 }
 
 // ==========================================
-// CLEAN ARTICLE TEXT FOR SHARING
+// CLEAN ARTICLE TEXT
 // ==========================================
 
 function cleanShareText(value) {
@@ -206,7 +221,10 @@ function cleanShareText(value) {
 }
 
 // ==========================================
-// ARTICLE SUMMARY FOR WHATSAPP
+// PREPARE LONG ARTICLE EXTRACT
+//
+// Uses only actual saved article text.
+// Does not invent content.
 // ==========================================
 
 export function shareSummary(
@@ -219,13 +237,16 @@ export function shareSummary(
     post?.summary ||
     "";
 
-  const cleaned = cleanShareText(source);
+  const cleaned =
+    cleanShareText(source);
 
   if (!cleaned) {
     return "";
   }
 
-  if (cleaned.length <= maxLength) {
+  if (
+    cleaned.length <= maxLength
+  ) {
     return cleaned;
   }
 
@@ -234,7 +255,8 @@ export function shareSummary(
     maxLength - 1
   );
 
-  const cut = cleaned.slice(0, limit);
+  const cut =
+    cleaned.slice(0, limit);
 
   const lastSpace = Math.max(
     cut.lastIndexOf(" "),
@@ -250,7 +272,12 @@ export function shareSummary(
 }
 
 // ==========================================
-// COMPLETE ARTICLE SHARING MESSAGE
+// COMPLETE WHATSAPP MESSAGE
+//
+// BRAND
+// HEADLINE
+// ARTICLE EXTRACT
+// FULL STORY LINK
 // ==========================================
 
 export function shareMessage(
@@ -284,12 +311,16 @@ export function shareMessage(
 }
 
 // ==========================================
-// SHARE LINK
+// SHARE ARTICLE LINK
 //
-// Shares longer article text and URL.
+// Sends:
+// - News brand
+// - Headline
+// - Approximately 500 characters
+// - Full article URL
 //
-// The article URL contains the original
-// server-generated Open Graph preview.
+// The article URL still contains the
+// generated Open Graph image metadata.
 //
 // ==========================================
 
@@ -308,7 +339,7 @@ export async function share(
     articleText
   );
 
-  // Native mobile Share API.
+  // Native mobile sharing.
 
   if (
     typeof navigator.share === "function"
@@ -319,8 +350,11 @@ export async function share(
       });
 
       return;
+
     } catch (error) {
-      if (error?.name === "AbortError") {
+      if (
+        error?.name === "AbortError"
+      ) {
         return;
       }
 
@@ -331,29 +365,32 @@ export async function share(
     }
   }
 
-  // WhatsApp link sharing.
+  // WhatsApp fallback.
 
   const whatsappURL =
     "https://wa.me/?text=" +
     encodeURIComponent(text);
 
-  // Navigate rather than rely on a popup
-  // that browsers may block.
-
-  window.location.href = whatsappURL;
+  window.location.href =
+    whatsappURL;
 }
 
 // ==========================================
-// BRANDED NEWS IMAGE URL
+// FULL-PHOTO NEWS CARD URL
 //
-// Matches the current tools/build.mjs:
+// Must match:
+// tools/build.mjs
 //
-// /assets/share/POST_ID-photo70-v2.jpg
+// DESIGN_VERSION = "fullphoto-v3"
+//
+// File generated:
+// /assets/share/POST_ID-fullphoto-v3.jpg
 //
 // ==========================================
 
 export function newsCardUrl(post) {
-  const identifier = articleIdentifier(post);
+  const identifier =
+    articleIdentifier(post);
 
   if (!identifier) {
     return "";
@@ -372,7 +409,7 @@ export function newsCardUrl(post) {
 }
 
 // ==========================================
-// COPY TEXT
+// COPY ARTICLE CAPTION
 // ==========================================
 
 async function copyText(value) {
@@ -381,7 +418,9 @@ async function copyText(value) {
   }
 
   try {
-    if (!navigator.clipboard?.writeText) {
+    if (
+      !navigator.clipboard?.writeText
+    ) {
       throw new Error(
         "Clipboard unavailable"
       );
@@ -404,80 +443,89 @@ async function copyText(value) {
 }
 
 // ==========================================
-// DOWNLOAD IMAGE FILE
+// SAVE NEWS IMAGE
+//
+// Uses a Blob URL when an image Blob
+// is already available.
 // ==========================================
 
 function downloadNewsImage(
-  imageURL,
+  blob,
   filename
 ) {
-  const link = document.createElement("a");
+  const objectURL =
+    URL.createObjectURL(blob);
 
-  link.href = imageURL;
-  link.download = filename;
-  link.target = "_blank";
-  link.rel = "noopener noreferrer";
+  const link =
+    document.createElement("a");
+
+  link.href =
+    objectURL;
+
+  link.download =
+    filename;
 
   document.body.append(link);
+
   link.click();
+
   link.remove();
+
+  setTimeout(() => {
+    URL.revokeObjectURL(objectURL);
+  }, 1000);
 }
 
 // ==========================================
-// SHARE ACTUAL NEWS IMAGE
+// SHARE ACTUAL NEWS CARD
 //
-// Device behavior:
+// MAIN FEATURES:
 //
-// 1. Download published branded JPEG.
+// - Gets the full clear news image
+// - Attaches the image on supported phones
+// - Sends approximately 500 characters
+// - Includes the full-story link
+// - Preserves a download/copy fallback
 //
-// 2. Convert it to a File object.
-//
-// 3. Check whether native file sharing
-//    is supported.
-//
-// 4. If supported, pass JPEG + caption
-//    to the device's share menu.
-//
-// 5. If unsupported, provide the image
-//    and caption for manual sharing.
-//
-// Important:
-// Apps such as WhatsApp may choose to
-// omit text supplied with an image file.
-// That is controlled by the receiving app.
-//
+// IMPORTANT:
+// WhatsApp may omit text supplied alongside
+// a file attachment on some devices.
+// This cannot be forced from a website.
 // ==========================================
 
-export async function shareNewsCard(
-  post
-) {
-  const identifier = articleIdentifier(post);
+export async function shareNewsCard(post) {
+  const identifier =
+    articleIdentifier(post);
 
   if (!identifier) {
     alert(
-      "This news article does not have a valid link."
+      "This article does not have a valid link."
     );
 
     return;
   }
 
-  const imageURL = newsCardUrl(post);
+  const imageURL =
+    newsCardUrl(post);
 
-  const articleLink = publicArticleUrl(post);
+  const articleLink =
+    publicArticleUrl(post);
 
   const title =
     post?.title || "News Update";
 
-  const summary = shareSummary(
-    post,
-    SHARE_SUMMARY_LENGTH
-  );
+  const summary =
+    shareSummary(
+      post,
+      SHARE_SUMMARY_LENGTH
+    );
 
-  const caption = shareMessage(
-    articleLink,
-    title,
-    summary
-  );
+  const caption =
+    shareMessage(
+      articleLink,
+      title,
+      summary
+    );
 
   const filename =
     "FrankNews-" +
@@ -485,8 +533,9 @@ export async function shareNewsCard(
     ".jpg";
 
   try {
-    // Fetch the generated image.
-    // We only use the official published URL.
+    // ======================================
+    // FETCH PUBLISHED NEWS IMAGE
+    // ======================================
 
     const response = await fetch(
       imageURL,
@@ -504,22 +553,31 @@ export async function shareNewsCard(
     }
 
     const type = (
-      response.headers.get("content-type") || ""
+      response.headers.get(
+        "content-type"
+      ) || ""
     ).toLowerCase();
 
-    if (!type.includes("image/jpeg")) {
+    if (
+      !type.includes("image/jpeg")
+    ) {
       throw new Error(
-        "Published NEWS card is not a JPEG image"
+        "The published NEWS card is not a JPEG image."
       );
     }
 
-    const blob = await response.blob();
+    const blob =
+      await response.blob();
 
     if (!blob.size) {
       throw new Error(
-        "The NEWS image is empty"
+        "The NEWS photograph is empty."
       );
     }
+
+    // ======================================
+    // BUILD SHAREABLE FILE
+    // ======================================
 
     const file = new File(
       [blob],
@@ -529,20 +587,33 @@ export async function shareNewsCard(
       }
     );
 
-    // Check native file sharing.
+    // ======================================
+    // CHECK DEVICE SUPPORT
+    // ======================================
 
-    const canShareFile =
-      typeof navigator.share === "function" &&
-      typeof navigator.canShare === "function" &&
-      navigator.canShare({
-        files: [file]
-      });
+    let canShareFile = false;
+
+    try {
+      canShareFile =
+        typeof navigator.share === "function" &&
+        typeof navigator.canShare === "function" &&
+        navigator.canShare({
+          files: [file]
+        });
+
+    } catch (error) {
+      console.warn(
+        "File sharing check failed:",
+        error
+      );
+    }
+
+    // ======================================
+    // NATIVE IMAGE SHARING
+    // ======================================
 
     if (canShareFile) {
       try {
-        // Some receiving apps preserve
-        // caption + URL; others omit them.
-
         await navigator.share({
           files: [file],
           text: caption
@@ -558,48 +629,40 @@ export async function shareNewsCard(
         }
 
         console.warn(
-          "NEWS card native sharing failed:",
+          "Native NEWS card sharing failed:",
           error
         );
       }
     }
 
     // ======================================
-    // FALLBACK FOR UNSUPPORTED DEVICES
+    // FALLBACK: IMAGE + COPIED CAPTION
     // ======================================
 
-    // First copy the caption so the reader
-    // can paste it into WhatsApp.
-
-    const copied = await copyText(
-      caption
-    );
-
-    // Then initiate the image download.
+    const copied =
+      await copyText(caption);
 
     downloadNewsImage(
-      imageURL,
+      blob,
       filename
     );
 
     alert(
       copied
-        ? "NEWS card opened for saving and article caption copied. Share the image in WhatsApp, then paste the caption."
-        : "NEWS card opened for saving. Share it in WhatsApp and copy the article text from the prompt."
+        ? "NEWS card saved and article caption copied. Send the picture in WhatsApp and paste the caption."
+        : "NEWS card saved. Send the picture in WhatsApp, then copy and paste the article caption."
     );
 
   } catch (error) {
     console.warn(
-      "NEWS card sharing unavailable:",
+      "NEWS card sharing error:",
       error
     );
 
-    // If the branded image is not available,
-    // preserve the working link-sharing route.
-
-    const useLink = window.confirm(
-      "The NEWS image is not available yet. Share the article text and link instead?"
-    );
+    const useLink =
+      window.confirm(
+        "The full-photo NEWS image is not available. Share the article text and link instead?"
+      );
 
     if (useLink) {
       await share(
@@ -621,13 +684,15 @@ export function card(
 ) {
   const wrapper = el(
     "article",
-    "card" + (compact ? " compact" : "")
+    "card" +
+      (compact ? " compact" : "")
   );
 
-  const articleLink = articleUrl(post);
+  const articleLink =
+    articleUrl(post);
 
   // ======================================
-  // CLICKABLE ARTICLE CONTENT
+  // CLICKABLE NEWS CONTENT
   // ======================================
 
   const link = el(
@@ -635,7 +700,8 @@ export function card(
     "card-link"
   );
 
-  link.href = articleLink;
+  link.href =
+    articleLink;
 
   link.setAttribute(
     "aria-label",
@@ -644,7 +710,7 @@ export function card(
   );
 
   // ======================================
-  // PHOTOGRAPH
+  // ORIGINAL NEWS PHOTOGRAPH
   // ======================================
 
   const image = el(
@@ -652,17 +718,24 @@ export function card(
     "card-cover"
   );
 
-  image.src = imageOf(post);
+  image.src =
+    imageOf(post);
+
   image.alt =
     post.title || "News photograph";
 
-  image.loading = "lazy";
-  image.decoding = "async";
+  image.loading =
+    "lazy";
 
-  link.append(image);
+  image.decoding =
+    "async";
+
+  link.append(
+    image
+  );
 
   // ======================================
-  // ARTICLE CONTENT
+  // NEWS DETAILS
   // ======================================
 
   const body = el(
@@ -730,7 +803,7 @@ export function card(
   wrapper.append(link);
 
   // ======================================
-  // SHARING BUTTON AREA
+  // SHARING BUTTONS
   // ======================================
 
   const shareArea = el(
@@ -738,12 +811,17 @@ export function card(
     "card-share-area"
   );
 
-  shareArea.style.display = "flex";
-  shareArea.style.flexWrap = "wrap";
-  shareArea.style.gap = "8px";
+  shareArea.style.display =
+    "flex";
+
+  shareArea.style.flexWrap =
+    "wrap";
+
+  shareArea.style.gap =
+    "8px";
 
   // ======================================
-  // BUTTON 1: SHARE NEWS CARD
+  // BUTTON 1: SHARE FULL-PHOTO NEWS CARD
   // ======================================
 
   const cardButton = el(
@@ -756,7 +834,7 @@ export function card(
 
   cardButton.setAttribute(
     "aria-label",
-    "Share NEWS photograph and article: " +
+    "Share the full-photo NEWS image: " +
       (post.title || "News")
   );
 
@@ -764,18 +842,20 @@ export function card(
     "click",
     async event => {
       event.preventDefault();
-      event.stopPropagation();
 
-      cardButton.disabled = true;
+      event.stopPropagation();
 
       const previousText =
         cardButton.textContent;
+
+      cardButton.disabled = true;
 
       cardButton.textContent =
         "Preparing NEWS Card…";
 
       try {
         await shareNewsCard(post);
+
       } finally {
         cardButton.disabled = false;
 
@@ -816,17 +896,20 @@ export function card(
     "click",
     async event => {
       event.preventDefault();
+
       event.stopPropagation();
 
-      const url = publicArticleUrl(post);
+      const url =
+        publicArticleUrl(post);
 
       const title =
         post.title || "News Update";
 
-      const summary = shareSummary(
-        post,
-        SHARE_SUMMARY_LENGTH
-      );
+      const summary =
+        shareSummary(
+          post,
+          SHARE_SUMMARY_LENGTH
+        );
 
       await share(
         url,
@@ -841,7 +924,9 @@ export function card(
     linkButton
   );
 
-  wrapper.append(shareArea);
+  wrapper.append(
+    shareArea
+  );
 
   return wrapper;
 }
@@ -851,9 +936,11 @@ export function card(
 // ==========================================
 
 export function menu() {
-  const button = $("#menuBtn");
+  const button =
+    $("#menuBtn");
 
-  const nav = $("#nav");
+  const nav =
+    $("#nav");
 
   button?.addEventListener(
     "click",
@@ -863,7 +950,9 @@ export function menu() {
       }
 
       const isOpen =
-        nav.classList.toggle("open");
+        nav.classList.toggle(
+          "open"
+        );
 
       button.setAttribute(
         "aria-expanded",
@@ -874,7 +963,8 @@ export function menu() {
 
   // NRM emblem.
 
-  const logo = $("#nrmLogo");
+  const logo =
+    $("#nrmLogo");
 
   if (logo) {
     logo.onload = () => {

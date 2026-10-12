@@ -8,7 +8,8 @@
    - Cloudinary photographs
    - Cloudflare comments
    - Article visitor counts
-   - WhatsApp, Facebook and X sharing
+   - Detailed WhatsApp sharing
+   - Facebook and X sharing
    - Copy article URL
    - 10-day publication window
    - Local and public article links
@@ -41,7 +42,9 @@ import {
   fmtDate,
   imageOf,
   message,
-  paragraphs
+  paragraphs,
+  shareSummary,
+  shareMessage
 } from './ui.js';
 
 import {
@@ -60,12 +63,13 @@ const COMMENT_API = API_BASE + '/comments';
 
 const VISIT_API = API_BASE + '/record-visit';
 
-const TEN_DAYS_MS =
-  10 * 24 * 60 * 60 * 1000;
+const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
 const MAX_NAME_LENGTH = 80;
 
 const MAX_COMMENT_LENGTH = 2000;
+
+const SHARE_TEXT_LENGTH = 500;
 
 // ==========================================
 // PAGE ELEMENTS
@@ -187,12 +191,23 @@ function setupSharing(newsPost) {
 
   const url = getPublicArticleUrl();
 
-  document.title =
-    `${title} | ${SITE_TITLE}`;
+  // Use real article text for the message.
+  const summary = shareSummary(
+    newsPost,
+    SHARE_TEXT_LENGTH
+  );
+
+  const fullShareText = shareMessage(
+    url,
+    title,
+    summary
+  );
+
+  document.title = `${title} | ${SITE_TITLE}`;
 
   // Browser description only.
-  // WhatsApp reads OG metadata from the
-  // server-generated article HTML.
+  // WhatsApp uses the server-generated
+  // Open Graph metadata for the image.
 
   const descriptionMeta =
     document.querySelector(
@@ -210,11 +225,14 @@ function setupSharing(newsPost) {
   // ======================================
   // WHATSAPP
   //
-  // Share URL only. Do not repeat headline
-  // as separate message text.
+  // Sends:
+  // - NEWS UPDATE
+  // - Headline
+  // - Extended article text
+  // - Article landing page URL
   //
-  // WhatsApp will generate its preview
-  // using server-side Open Graph metadata.
+  // WhatsApp can still fetch the branded
+  // Open Graph preview from the article URL.
   // ======================================
 
   const whatsapp = $('#shareWhatsApp');
@@ -222,16 +240,19 @@ function setupSharing(newsPost) {
   if (whatsapp) {
     whatsapp.href =
       'https://wa.me/?text=' +
-      encodeURIComponent(url);
+      encodeURIComponent(fullShareText);
 
     whatsapp.target = '_blank';
 
-    whatsapp.rel =
-      'noopener noreferrer';
+    whatsapp.rel = 'noopener noreferrer';
   }
 
   // ======================================
   // FACEBOOK
+  //
+  // Facebook controls shared preview text.
+  // The article's OG tags supply its
+  // headline, image and description.
   // ======================================
 
   const facebook = $('#shareFacebook');
@@ -243,31 +264,36 @@ function setupSharing(newsPost) {
 
     facebook.target = '_blank';
 
-    facebook.rel =
-      'noopener noreferrer';
+    facebook.rel = 'noopener noreferrer';
   }
 
   // ======================================
   // X
+  //
+  // Short text to avoid overly long posts.
   // ======================================
 
   const xButton = $('#shareX');
 
   if (xButton) {
+    const xText =
+      '📰 ' + title;
+
     xButton.href =
       'https://twitter.com/intent/tweet?text=' +
-      encodeURIComponent(title) +
+      encodeURIComponent(xText) +
       '&url=' +
       encodeURIComponent(url);
 
     xButton.target = '_blank';
 
-    xButton.rel =
-      'noopener noreferrer';
+    xButton.rel = 'noopener noreferrer';
   }
 
   // ======================================
   // COPY LINK
+  //
+  // Keeps the existing copy-link behavior.
   // ======================================
 
   const copyButton = $('#copyArticleLink');
@@ -293,9 +319,7 @@ function setupSharing(newsPost) {
     };
   }
 
-  sharingSection?.classList.remove(
-    'hidden'
-  );
+  sharingSection?.classList.remove('hidden');
 }
 
 // ==========================================
@@ -688,9 +712,7 @@ if (commentForm) {
 // ==========================================
 
 async function loadArticle() {
-  sharingSection?.classList.add(
-    'hidden'
-  );
+  sharingSection?.classList.add('hidden');
 
   if (!article) {
     return;
@@ -903,13 +925,9 @@ async function loadArticle() {
         : 'Unable to load this article. Please check the link or connection.'
     );
 
-    commentForm?.classList.add(
-      'hidden'
-    );
+    commentForm?.classList.add('hidden');
 
-    sharingSection?.classList.add(
-      'hidden'
-    );
+    sharingSection?.classList.add('hidden');
   }
 }
 

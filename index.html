@@ -10,10 +10,6 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <!-- ======================================
-       APP NAME
-  ====================================== -->
-
   <title>
     #FrankMyMP #FrankMyChoice | News & Updates
   </title>
@@ -40,26 +36,11 @@
     content="default"
   >
 
-  <!-- ======================================
-       SOCIAL MEDIA SHARING
+  <!-- SOCIAL SHARING FALLBACKS
+       The Cloudflare build replaces these
+       with metadata from the latest news. -->
 
-       These are fallback values.
-
-       During deployment, tools/build.mjs
-       replaces them with metadata from the
-       latest published news article.
-
-       Photograph: first uploaded image
-       Title: article headline
-       Description: short article excerpt
-
-       WhatsApp reads server-generated HTML.
-  ====================================== -->
-
-  <meta
-    property="og:type"
-    content="website"
-  >
+  <meta property="og:type" content="website">
 
   <meta
     property="og:site_name"
@@ -86,9 +67,7 @@
     content="summary_large_image"
   >
 
-  <!-- ======================================
-       BROWSER FAVICONS
-  ====================================== -->
+  <!-- ICONS -->
 
   <link
     rel="icon"
@@ -110,60 +89,52 @@
     href="/assets/icons/favicon-16.png"
   >
 
-  <!-- ======================================
-       IPHONE APP ICON
-  ====================================== -->
-
   <link
     rel="apple-touch-icon"
     sizes="180x180"
     href="/assets/icons/apple-touch-icon.png"
   >
 
-  <!-- ======================================
-       PWA MANIFEST
-  ====================================== -->
-
   <link
     rel="manifest"
     href="/manifest.webmanifest"
   >
-
-  <!-- ======================================
-       MAIN STYLESHEET
-  ====================================== -->
 
   <link
     rel="stylesheet"
     href="/css/style.css"
   >
 
-  <!-- ======================================
-       INSTALL APP BUTTON STYLES
-  ====================================== -->
-
   <style>
+    /* ========================================
+       INSTALL APP BUTTON
+    ======================================== */
 
     .install-app-btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
-      padding: 10px 15px;
+      gap: 6px;
+
+      padding: 10px 14px;
+
       border: 1px solid #b71924;
       border-radius: 999px;
+
       background: #c51623;
       color: #ffffff;
-      font: inherit;
+
+      font-family: inherit;
       font-size: 13px;
       font-weight: 800;
       line-height: 1.2;
+
       cursor: pointer;
       white-space: nowrap;
 
       transition:
-        transform 0.2s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        transform 0.2s ease;
     }
 
     .install-app-btn:hover {
@@ -176,22 +147,48 @@
       outline-offset: 3px;
     }
 
-    .install-app-btn.hidden {
+    .install-app-btn.hidden,
+    .install-app-btn[hidden] {
       display: none !important;
     }
 
+    /* ========================================
+       HEADER ACTIONS
+       Install button stays OUTSIDE nav.
+    ======================================== */
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .header-actions .nav-toggle {
+      flex-shrink: 0;
+    }
+
+    /* ========================================
+       INSTALLATION INSTRUCTIONS
+    ======================================== */
+
     .install-notice {
       position: fixed;
+
       left: 16px;
       right: 16px;
       bottom: 18px;
+
       z-index: 9999;
+
       max-width: 420px;
       margin: 0 auto;
       padding: 18px;
 
       border: 1px solid #e0c450;
       border-radius: 16px;
+
       background: #ffffff;
       color: #151515;
 
@@ -212,25 +209,87 @@
     .install-notice button {
       border: 0;
       border-radius: 8px;
+
       background: #FFD800;
       color: #151515;
+
       font: inherit;
       font-weight: 700;
+
       padding: 9px 18px;
       cursor: pointer;
     }
 
-    @media (max-width: 600px) {
+    /* ========================================
+       MOBILE HEADER
+    ======================================== */
 
-      .install-app-btn {
-        font-size: 12px;
-        padding: 10px 13px;
+    @media (max-width: 800px) {
+      .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
       }
 
+      .header-inner .brandgroup {
+        flex: 0 1 auto;
+        min-width: 0;
+        margin-right: auto;
+      }
+
+      .header-inner .brand {
+        white-space: nowrap;
+      }
+
+      .header-inner .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+        order: 2;
+      }
+
+      .header-inner .nav {
+        order: 3;
+        flex-basis: 100%;
+        width: 100%;
+      }
+
+      .header-actions .install-app-btn {
+        padding: 9px 11px;
+        font-size: 11px;
+      }
+
+      .header-actions .nav-toggle {
+        margin: 0;
+      }
     }
 
-  </style>
+    /* SMALL PHONE SCREENS */
 
+    @media (max-width: 390px) {
+      .header-actions {
+        gap: 5px;
+      }
+
+      .header-actions .install-app-btn {
+        font-size: 10px;
+        padding: 8px 9px;
+      }
+
+      .header-inner .brand {
+        font-size: 17px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .install-app-btn {
+        transition: none;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -240,15 +299,11 @@
   ====================================== -->
 
   <div class="topbar">
-
     <div class="wrap location-bar">
-
       <span>
         RWAMWANJA • KAMWENGE • UGANDA
       </span>
-
     </div>
-
   </div>
 
   <!-- ======================================
@@ -256,7 +311,6 @@
   ====================================== -->
 
   <header class="header">
-
     <div class="wrap header-inner">
 
       <!-- BRAND -->
@@ -267,8 +321,6 @@
         aria-label="#FrankMyMP #FrankMyChoice Homepage"
       >
 
-        <!-- OPTIONAL NRM EMBLEM -->
-
         <img
           class="nrm-mark hidden"
           id="nrmLogo"
@@ -277,10 +329,7 @@
           onerror="this.hidden=true;this.style.display='none';"
         >
 
-        <!-- TRADEMARK -->
-
         <div class="brand">
-
           <span>
             <b class="red">#Frank</b>MyMP
           </span>
@@ -288,23 +337,42 @@
           <span>
             #Frank<b class="red">MyChoice</b>
           </span>
-
         </div>
 
       </a>
 
-      <!-- MOBILE MENU -->
+      <!-- ==================================
+           HEADER ACTIONS
 
-      <button
-        class="nav-toggle"
-        id="menuBtn"
-        type="button"
-        aria-label="Open navigation menu"
-        aria-controls="nav"
-        aria-expanded="false"
-      >
-        ☰
-      </button>
+           IMPORTANT:
+           Install App is outside #nav,
+           so it is visible on mobile.
+      =================================== -->
+
+      <div class="header-actions">
+
+        <button
+          id="installAppBtn"
+          class="install-app-btn hidden"
+          type="button"
+          aria-label="Install FrankMyMP application"
+        >
+          <span aria-hidden="true">↓</span>
+          Install App
+        </button>
+
+        <button
+          class="nav-toggle"
+          id="menuBtn"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-controls="nav"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+
+      </div>
 
       <!-- NAVIGATION -->
 
@@ -330,34 +398,13 @@
           aria-label="Recorded site visits"
         >
 
-          <span aria-hidden="true">
-            ◉
-          </span>
+          <span aria-hidden="true">◉</span>
 
           Views:
 
-          <strong id="visitors">
-            —
-          </strong>
+          <strong id="visitors">—</strong>
 
         </span>
-
-        <!-- INSTALL APP -->
-
-        <button
-          id="installAppBtn"
-          class="install-app-btn hidden"
-          type="button"
-          aria-label="Install FrankMyMP application"
-        >
-
-          <span aria-hidden="true">
-            ↓
-          </span>
-
-          Install App
-
-        </button>
 
         <!-- ADMIN -->
 
@@ -371,11 +418,10 @@
       </nav>
 
     </div>
-
   </header>
 
   <!-- ======================================
-       INSTALL APP INFORMATION
+       INSTALL APP INSTRUCTIONS
   ====================================== -->
 
   <div
@@ -456,17 +502,13 @@
 
       </div>
 
-      <!-- FIREBASE FEATURED ARTICLES -->
-
       <div
         id="featured"
         class="feature-grid"
       >
-
         <div class="empty">
           Loading featured news…
         </div>
-
       </div>
 
     </section>
@@ -488,8 +530,6 @@
         >
           Latest Updates
         </h2>
-
-        <!-- CATEGORY FILTER -->
 
         <select
           id="categoryFilter"
@@ -534,20 +574,14 @@
 
       </div>
 
-      <!-- NEWS ARTICLES FROM FIREBASE -->
-
       <div
         id="news"
         class="news-grid"
       >
-
         <div class="empty">
           Loading news…
         </div>
-
       </div>
-
-      <!-- LOAD MORE -->
 
       <button
         id="loadMore"
@@ -570,8 +604,6 @@
     <div class="wrap footer-grid">
 
       <div>
-
-        <!-- TRADEMARK -->
 
         <div class="brand">
 
@@ -598,11 +630,8 @@
         attributed to their sources.
 
         <p>
-
           © <span id="year"></span>
-
           #FrankMyMP #FrankMyChoice
-
         </p>
 
       </div>
@@ -611,18 +640,14 @@
 
   </footer>
 
-  <!-- ======================================
-       FIREBASE NEWS APPLICATION
-  ====================================== -->
+  <!-- FIREBASE NEWS -->
 
   <script
     type="module"
     src="/js/home.js"
   ></script>
 
-  <!-- ======================================
-       PWA INSTALLATION
-  ====================================== -->
+  <!-- PWA INSTALLATION -->
 
   <script
     defer

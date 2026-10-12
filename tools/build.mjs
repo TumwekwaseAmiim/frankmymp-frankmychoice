@@ -3,7 +3,15 @@ import fs from "node:fs";
 import path from "node:path";
 import admin from "firebase-admin";
 
-const root = path.resolve(import.meta.dirname, "..");
+// ==========================================
+// CONFIGURATION
+// ==========================================
+
+const root = path.resolve(
+  import.meta.dirname,
+  ".."
+);
+
 const dist = path.join(root, "dist");
 
 const SITE_URL = (
@@ -11,15 +19,17 @@ const SITE_URL = (
   "https://frankmymp-frankmychoice.pages.dev"
 ).replace(/\/+$/, "");
 
-const SITE_TITLE = "#FrankMyMP #FrankMyChoice";
+const SITE_TITLE =
+  "#FrankMyMP #FrankMyChoice";
 
 const DEFAULT_DESCRIPTION =
   "Latest news and development updates from Rwamwanja, Kamwenge, Uganda.";
 
-const TEN_DAYS = 10 * 24 * 60 * 60 * 1000;
+const TEN_DAYS =
+  10 * 24 * 60 * 60 * 1000;
 
 // ==========================================
-// HELPERS
+// TEXT HELPERS
 // ==========================================
 
 function escapeHTML(value) {
@@ -38,10 +48,12 @@ function plainText(value) {
     .trim();
 }
 
-function shortText(value, max = 140) {
+function shortText(value, max = 150) {
   const text = plainText(value);
 
-  if (text.length <= max) return text;
+  if (text.length <= max) {
+    return text;
+  }
 
   return (
     text.slice(0, max - 1)
@@ -72,22 +84,39 @@ function timestampMillis(value) {
   return 0;
 }
 
-function firstImage(post) {
+// ==========================================
+// CLOUDINARY PHOTOGRAPHS
+// ==========================================
+
+function imageURL(image) {
+  if (!image) return "";
+
+  if (typeof image === "string") {
+    return image.trim();
+  }
+
+  if (typeof image === "object") {
+    return (
+      image.url ||
+      image.secure_url ||
+      image.secureUrl ||
+      image.src ||
+      ""
+    ).trim();
+  }
+
+  return "";
+}
+
+function originalPhoto(post) {
   const images = Array.isArray(post.images)
     ? post.images
     : [];
 
   for (const image of images) {
-    const url = typeof image === "string"
-      ? image
-      : image?.url ||
-        image?.secure_url ||
-        image?.src;
+    const url = imageURL(image);
 
-    if (
-      typeof url === "string" &&
-      /^https:\/\//i.test(url)
-    ) {
+    if (/^https:\/\//i.test(url)) {
       return url;
     }
   }
@@ -95,49 +124,96 @@ function firstImage(post) {
   return "";
 }
 
+// Convert ordinary public Cloudinary images
+// to JPEG for better social-preview support.
+//
+// This does not modify the uploaded original.
+//
+// A transformed URL must still be publicly
+// accessible. Check it after deployment.
+
+function socialPhoto(post) {
+  const original = originalPhoto(post);
+
+  if (!original) return "";
+
+  try {
+    const parsed = new URL(original);
+
+    const isCloudinary =
+      parsed.hostname === "res.cloudinary.com";
+
+    const isImage =
+      parsed.pathname.includes("/image/upload/");
+
+    if (isCloudinary && isImage) {
+      parsed.pathname = parsed.pathname.replace(
+        "/image/upload/",
+        "/image/upload/f_jpg,q_auto,c_limit,w_1200/"
+      );
+
+      return parsed.toString();
+    }
+
+    // Other HTTPS photo sources are
+    // used without modifications.
+    return original;
+
+  } catch {
+    return original;
+  }
+}
+
+// ==========================================
+// REMOVE EXISTING OG METADATA
+// ==========================================
+
 function removeExistingSocialTags(html) {
-  const socialNames = [
+  const names = new Set([
     "description",
     "twitter:card",
     "twitter:title",
     "twitter:description",
     "twitter:image"
-  ];
+  ]);
 
-  const socialProperties = [
+  const properties = new Set([
+    "og:type",
     "og:title",
     "og:description",
     "og:image",
+    "og:image:url",
+    "og:image:secure_url",
+    "og:image:type",
     "og:image:width",
     "og:image:height",
     "og:image:alt",
-    "og:type",
     "og:url",
     "og:site_name"
-  ];
+  ]);
 
   html = html.replace(
     /<meta\b[^>]*>/gi,
     tag => {
-      const attr = tag.match(
+      const match = tag.match(
         /\b(name|property)\s*=\s*["']([^"']+)["']/i
       );
 
-      if (!attr) return tag;
+      if (!match) return tag;
 
-      const type = attr[1].toLowerCase();
-      const name = attr[2].toLowerCase();
+      const kind = match[1].toLowerCase();
+      const value = match[2].toLowerCase();
 
       if (
-        type === "name" &&
-        socialNames.includes(name)
+        kind === "name" &&
+        names.has(value)
       ) {
         return "";
       }
 
       if (
-        type === "property" &&
-        socialProperties.includes(name)
+        kind === "property" &&
+        properties.has(value)
       ) {
         return "";
       }
@@ -154,7 +230,11 @@ function removeExistingSocialTags(html) {
   return html;
 }
 
-function createSocialHead({
+// ==========================================
+// SOCIAL PREVIEW METADATA
+// ==========================================
+
+function generateSocialHead({
   title,
   description,
   image,
@@ -165,49 +245,87 @@ function createSocialHead({
   const d = escapeHTML(description);
   const u = escapeHTML(url);
 
-  const imageTags = image
-    ? `
+  let imageTags = "";
+
+  if (image) {
+    const i = escapeHTML(image);
+
+    const isJPEG =
+      image.includes("/f_jpg,") ||
+      /\.jpe?g(?:[?#]|$)/i.test(image);
+
+    imageTags = `
   <meta property="og:image"
-        content="${escapeHTML(image)}">
+        content="${i}">
+
+  <meta property="og:image:secure_url"
+        content="${i}">
+
   <meta property="og:image:alt"
         content="${t}">
+
+  ${isJPEG
+    ? '<meta property="og:image:type" content="image/jpeg">'
+    : ""}
+
   <meta name="twitter:image"
-        content="${escapeHTML(image)}">`
-    : "";
+        content="${i}">
+`;
+  }
 
   return `
-  <!-- Generated news sharing metadata -->
+  <!-- Automatically generated news metadata -->
 
   <title>${t}</title>
 
-  <meta name="description"
-        content="${d}">
+  <meta
+    name="description"
+    content="${d}"
+  >
 
-  <meta property="og:type"
-        content="${escapeHTML(type)}">
+  <meta
+    property="og:type"
+    content="${escapeHTML(type)}"
+  >
 
-  <meta property="og:site_name"
-        content="${escapeHTML(SITE_TITLE)}">
+  <meta
+    property="og:site_name"
+    content="${escapeHTML(SITE_TITLE)}"
+  >
 
-  <meta property="og:title"
-        content="${t}">
+  <meta
+    property="og:title"
+    content="${t}"
+  >
 
-  <meta property="og:description"
-        content="${d}">
+  <meta
+    property="og:description"
+    content="${d}"
+  >
 
-  <meta property="og:url"
-        content="${u}">
+  <meta
+    property="og:url"
+    content="${u}"
+  >
 
   ${imageTags}
 
-  <meta name="twitter:card"
-        content="${image ? "summary_large_image" : "summary"}">
+  <meta
+    name="twitter:card"
+    content="${image
+      ? "summary_large_image"
+      : "summary"}"
+  >
 
-  <meta name="twitter:title"
-        content="${t}">
+  <meta
+    name="twitter:title"
+    content="${t}"
+  >
 
-  <meta name="twitter:description"
-        content="${d}">
+  <meta
+    name="twitter:description"
+    content="${d}"
+  >
 
   <link rel="canonical" href="${u}">
 `;
@@ -222,17 +340,19 @@ function injectSocialHead(html, data) {
   );
 
   if (!/<\/head>/i.test(html)) {
-    throw new Error("HTML document has no closing head tag.");
+    throw new Error(
+      "HTML template has no closing head tag."
+    );
   }
 
   return html.replace(
     /<\/head>/i,
-    `${createSocialHead(data)}\n</head>`
+    `${generateSocialHead(data)}\n</head>`
   );
 }
 
 // ==========================================
-// PREPARE PUBLISHING FOLDER
+// PREPARE OUTPUT DIRECTORY
 // ==========================================
 
 fs.rmSync(dist, {
@@ -244,7 +364,7 @@ fs.mkdirSync(dist, {
   recursive: true
 });
 
-const staticPaths = [
+const staticFiles = [
   "index.html",
   "post.html",
   "manifest.webmanifest",
@@ -255,21 +375,24 @@ const staticPaths = [
   "admin"
 ];
 
-for (const name of staticPaths) {
+for (const name of staticFiles) {
   const source = path.join(root, name);
-  const destination = path.join(dist, name);
+  const target = path.join(dist, name);
 
   if (fs.existsSync(source)) {
-    fs.cpSync(source, destination, {
+    fs.cpSync(source, target, {
       recursive: true
     });
   } else {
-    console.warn("Missing optional file:", name);
+    console.warn(
+      "Optional file not found:",
+      name
+    );
   }
 }
 
 // ==========================================
-// FIREBASE ADMIN
+// CONNECT TO FIREBASE
 // ==========================================
 
 const credentials =
@@ -277,13 +400,13 @@ const credentials =
 
 if (!credentials) {
   throw new Error(
-    "Missing FIREBASE_SERVICE_ACCOUNT_JSON. " +
-    "Configure it securely in Cloudflare Pages " +
-    "build environment variables."
+    "FIREBASE_SERVICE_ACCOUNT_JSON is missing. " +
+    "Check the Cloudflare build secret."
   );
 }
 
-const serviceAccount = JSON.parse(credentials);
+const serviceAccount =
+  JSON.parse(credentials);
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -296,10 +419,12 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // ==========================================
-// FETCH ACTIVE PUBLISHED NEWS
+// RETRIEVE PUBLISHED ARTICLES
 // ==========================================
 
-console.log("Loading published news from Firebase...");
+console.log(
+  "Loading published news from Firestore..."
+);
 
 const snapshot = await db
   .collection("posts")
@@ -313,25 +438,19 @@ const activePosts = snapshot.docs
     const post = document.data();
 
     return {
-      id: document.id,
       ...post,
+      id: document.id,
       publishedMillis: timestampMillis(
         post.publishedAt || post.createdAt
       )
     };
   })
   .filter(post => {
-    if (!post.publishedMillis) return false;
-
-    if (post.publishedMillis > now) return false;
-
-    if (
-      now - post.publishedMillis >= TEN_DAYS
-    ) {
-      return false;
-    }
-
-    return true;
+    return (
+      post.publishedMillis > 0 &&
+      post.publishedMillis <= now &&
+      now - post.publishedMillis < TEN_DAYS
+    );
   })
   .sort(
     (a, b) =>
@@ -339,26 +458,22 @@ const activePosts = snapshot.docs
   );
 
 console.log(
-  "Active published posts:",
+  "Active articles:",
   activePosts.length
 );
 
 // ==========================================
-// HOMEPAGE WHATSAPP PREVIEW
+// DYNAMIC HOMEPAGE PREVIEW
 // ==========================================
 
-// Choose the newest active article with
-// an uploaded photograph.
+const latestWithPhoto =
+  activePosts.find(post => originalPhoto(post));
 
-const latestWithPhoto = activePosts.find(
-  post => firstImage(post)
-);
-
-const homepageData = latestWithPhoto
+const homepagePreview = latestWithPhoto
   ? {
       title: shortText(
-        latestWithPhoto.title || SITE_TITLE,
-        100
+        latestWithPhoto.title,
+        110
       ),
 
       description: shortText(
@@ -368,7 +483,7 @@ const homepageData = latestWithPhoto
         140
       ),
 
-      image: firstImage(latestWithPhoto),
+      image: socialPhoto(latestWithPhoto),
 
       url: SITE_URL + "/",
 
@@ -376,13 +491,9 @@ const homepageData = latestWithPhoto
     }
   : {
       title: SITE_TITLE,
-
       description: DEFAULT_DESCRIPTION,
-
       image: "",
-
       url: SITE_URL + "/",
-
       type: "website"
     };
 
@@ -391,23 +502,26 @@ const homepageTemplate = fs.readFileSync(
   "utf8"
 );
 
-const homepageHTML = injectSocialHead(
-  homepageTemplate,
-  homepageData
-);
-
 fs.writeFileSync(
   path.join(dist, "index.html"),
-  homepageHTML
+  injectSocialHead(
+    homepageTemplate,
+    homepagePreview
+  )
 );
 
 console.log(
   "Homepage preview:",
-  homepageData.title
+  homepagePreview.title
+);
+
+console.log(
+  "Homepage image:",
+  homepagePreview.image || "No photograph"
 );
 
 // ==========================================
-// INDIVIDUAL ARTICLE PREVIEWS
+// GENERATE INDIVIDUAL ARTICLE PAGES
 // ==========================================
 
 const articleTemplate = fs.readFileSync(
@@ -424,7 +538,7 @@ for (const post of activePosts) {
 
   if (!/^[a-zA-Z0-9_-]{1,150}$/.test(slug)) {
     console.warn(
-      "Skipping unsupported article ID:",
+      "Unsupported article identifier:",
       slug
     );
     continue;
@@ -433,7 +547,17 @@ for (const post of activePosts) {
   const articleURL =
     `${SITE_URL}/post/${encodeURIComponent(slug)}/`;
 
-  const articleData = {
+  const original = originalPhoto(post);
+  const previewImage = socialPhoto(post);
+
+  if (!original) {
+    console.warn(
+      "No uploaded photo for article:",
+      slug
+    );
+  }
+
+  const articlePreview = {
     title: shortText(
       post.title || "News Article",
       110
@@ -446,31 +570,29 @@ for (const post of activePosts) {
       150
     ),
 
-    image: firstImage(post),
-
+    image: previewImage,
     url: articleURL,
-
     type: "article"
   };
 
-  const articleHTML = injectSocialHead(
+  const page = injectSocialHead(
     articleTemplate,
-    articleData
+    articlePreview
   );
 
-  const articleFolder = path.join(
+  const folder = path.join(
     dist,
     "post",
     slug
   );
 
-  fs.mkdirSync(articleFolder, {
+  fs.mkdirSync(folder, {
     recursive: true
   });
 
   fs.writeFileSync(
-    path.join(articleFolder, "index.html"),
-    articleHTML
+    path.join(folder, "index.html"),
+    page
   );
 
   sitemap.push(
@@ -478,6 +600,20 @@ for (const post of activePosts) {
   );
 
   articleCount++;
+
+  console.log(
+    `Article ${articleCount}: ${slug}`
+  );
+
+  console.log(
+    "  Original photo:",
+    original || "None"
+  );
+
+  console.log(
+    "  WhatsApp photo:",
+    previewImage || "None"
+  );
 }
 
 // ==========================================
@@ -487,13 +623,11 @@ for (const post of activePosts) {
 const sitemapXML =
   '<?xml version="1.0" encoding="UTF-8"?>' +
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' +
-  sitemap.map(item => {
-    return (
-      `<url><loc>` +
-      escapeHTML(SITE_URL + item) +
-      `</loc></url>`
-    );
-  }).join("") +
+  sitemap.map(item =>
+    '<url><loc>' +
+    escapeHTML(SITE_URL + item) +
+    '</loc></url>'
+  ).join("") +
   "</urlset>";
 
 fs.writeFileSync(
@@ -502,22 +636,16 @@ fs.writeFileSync(
 );
 
 // ==========================================
-// BUILD COMPLETE
+// BUILD SUMMARY
 // ==========================================
 
-console.log("--------------------------------");
-
-console.log("Frank News build successful");
-
+console.log("------------------------------");
+console.log("Frank News build complete");
 console.log("Website:", SITE_URL);
-
-console.log("Article previews:", articleCount);
-
+console.log("Articles generated:", articleCount);
 console.log(
   "Latest homepage photograph:",
-  homepageData.image || "None"
+  homepagePreview.image || "None"
 );
-
-console.log("Output folder:", dist);
-
-console.log("--------------------------------");
+console.log("Output directory:", dist);
+console.log("------------------------------");

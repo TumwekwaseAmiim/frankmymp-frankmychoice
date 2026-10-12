@@ -3,7 +3,6 @@
 <html lang="en">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -11,26 +10,16 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <!-- =====================================
-       ARTICLE PAGE TITLE
-       Automatically updated by build.mjs
-  ====================================== -->
-
-  <title>Article | #FrankMyMP #FrankMyChoice</title>
+  <title>
+    Article | #FrankMyMP #FrankMyChoice
+  </title>
 
   <meta
     name="description"
     content="Read news and updates from Rwamwanja, Kamwenge, Uganda."
   >
 
-  <!-- =====================================
-       APP IDENTITY
-  ====================================== -->
-
-  <meta
-    name="theme-color"
-    content="#FFD800"
-  >
+  <meta name="theme-color" content="#FFD800">
 
   <meta
     name="apple-mobile-web-app-title"
@@ -47,17 +36,14 @@
     content="default"
   >
 
-  <!-- =====================================
-       SOCIAL PREVIEW FALLBACK
+  <!--
+    SOCIAL PREVIEW FALLBACK
 
-       Cloudflare build.mjs replaces the
-       article metadata on generated pages.
-  ====================================== -->
+    tools/build.mjs replaces these tags for
+    individual published article pages.
+  -->
 
-  <meta
-    property="og:type"
-    content="article"
-  >
+  <meta property="og:type" content="article">
 
   <meta
     property="og:site_name"
@@ -79,9 +65,7 @@
     content="summary_large_image"
   >
 
-  <!-- =====================================
-       BROWSER ICONS
-  ====================================== -->
+  <!-- ICONS -->
 
   <link
     rel="icon"
@@ -109,36 +93,25 @@
     sizes="180x180"
   >
 
-  <!-- =====================================
-       PWA
-  ====================================== -->
+  <!-- PWA -->
 
   <link
     rel="manifest"
     href="/manifest.webmanifest"
   >
 
-  <!-- =====================================
-       EXISTING WEBSITE STYLES
-  ====================================== -->
+  <!-- EXISTING WEBSITE CSS -->
 
   <link
     rel="stylesheet"
     href="/css/style.css"
   >
 
-  <!-- =====================================
-       ARTICLE LANDING PAGE STYLES
-
-       Scoped to this page.
-       Does not replace homepage styling.
-  ====================================== -->
-
   <style>
 
-    /* ------------------------------------
-       BASE
-    ------------------------------------ */
+    /* ========================================
+       ARTICLE PAGE
+    ======================================== */
 
     body.article-page {
       margin: 0;
@@ -146,9 +119,9 @@
       color: #191919;
     }
 
-    /* ------------------------------------
-       HEADER NAVIGATION
-    ------------------------------------ */
+    /* ========================================
+       HEADER
+    ======================================== */
 
     .article-page .article-navigation {
       display: flex;
@@ -162,19 +135,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
       min-height: 42px;
       padding: 10px 16px;
-
       color: #222;
       text-decoration: none;
-      font-weight: 700;
       font-size: 14px;
-
+      font-weight: 700;
       border-radius: 999px;
-      transition:
-        background 0.2s ease,
-        color 0.2s ease;
+      transition: background .2s, color .2s;
     }
 
     .article-page .article-nav-link:hover {
@@ -190,9 +158,9 @@
       border: 1px solid #e9e0bd;
     }
 
-    /* ------------------------------------
-       NEWS STRAP / CATEGORY HEADER
-    ------------------------------------ */
+    /* ========================================
+       NEWS STRAP
+    ======================================== */
 
     .article-page .article-news-strap {
       padding: 22px 0 0;
@@ -201,13 +169,10 @@
     .article-page .article-news-bar {
       display: flex;
       align-items: center;
-
       min-height: 54px;
-
       background: #fff;
       border: 1px solid #eee3c5;
       border-radius: 12px;
-
       overflow: hidden;
     }
 
@@ -215,42 +180,39 @@
       display: flex;
       align-items: center;
       justify-content: center;
-
       align-self: stretch;
-
       flex: 0 0 auto;
-
       padding: 0 24px;
-
       background: #c81626;
-      color: #fff;
-
+      color: white;
       font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.5px;
+      letter-spacing: .5px;
     }
 
     .article-page .article-news-text {
       padding: 12px 18px;
-
       color: #343434;
       font-size: 14px;
       font-weight: 600;
     }
 
-    /* ------------------------------------
-       BREADCRUMB
-    ------------------------------------ */
+    /* ========================================
+       MAIN ARTICLE LAYOUT
+    ======================================== */
+
+    .article-page .landing-main {
+      width: min(100% - 32px, 1020px);
+      margin: 0 auto;
+      padding-bottom: 48px;
+    }
 
     .article-page .article-breadcrumb {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-
       gap: 9px;
-
       margin: 24px 0 18px;
-
       font-size: 13px;
       color: #686868;
     }
@@ -261,63 +223,35 @@
       font-weight: 700;
     }
 
-    .article-page .article-breadcrumb a:hover {
-      text-decoration: underline;
-    }
-
-    /* ------------------------------------
-       ARTICLE LANDING WRAPPER
-    ------------------------------------ */
-
-    .article-page .landing-main {
-      width: min(100% - 32px, 1020px);
-      margin: 0 auto;
-      padding-bottom: 48px;
-    }
-
     .article-page .article-page-heading {
       margin-bottom: 20px;
     }
 
     .article-page .article-page-heading h2 {
       margin: 0;
-
       padding-bottom: 13px;
-
       font-size: clamp(20px, 2.5vw, 27px);
       font-weight: 800;
-
       border-bottom: 3px solid #242424;
     }
 
-    /* ------------------------------------
-       ARTICLE CONTENT
-    ------------------------------------ */
-
     .article-page .article-shell {
-      background: #fff;
-
+      background: white;
       border: 1px solid #eee5d4;
       border-radius: 16px;
-
       padding: clamp(18px, 4vw, 40px);
-
-      box-shadow: 0 8px 24px rgba(
-        0, 0, 0, 0.025
-      );
+      box-shadow: 0 8px 24px rgba(0,0,0,.025);
     }
 
-    .article-page .article-shell #article {
+    .article-page #article {
       min-width: 0;
     }
 
     .article-page #article h1 {
-      margin-top: 10px;
-      margin-bottom: 14px;
-
+      margin: 10px 0 14px;
       font-size: clamp(27px, 4vw, 43px);
       line-height: 1.22;
-      letter-spacing: -0.7px;
+      letter-spacing: -.7px;
       overflow-wrap: anywhere;
     }
 
@@ -332,28 +266,23 @@
       color: #818181;
     }
 
-    /* Full photographs without cropping */
+    /* ORIGINAL ARTICLE PHOTOS:
+       SHOW FULL PHOTO WITHOUT CROPPING */
 
     .article-page #article img.photo {
       display: block;
-
       width: 100%;
       height: auto;
       max-height: none;
-
       object-fit: contain;
-
       margin: 24px auto;
-
       border-radius: 12px;
     }
 
     .article-page #article .photo-grid {
       display: grid;
-
       grid-template-columns:
         repeat(auto-fit, minmax(220px, 1fr));
-
       gap: 14px;
       margin: 18px 0;
     }
@@ -361,18 +290,14 @@
     .article-page #article .photo-grid img {
       width: 100%;
       height: auto;
-
       object-fit: contain;
-
       border-radius: 10px;
     }
 
     .article-page #article .article-body {
       margin-top: 24px;
-
       line-height: 1.85;
       font-size: 16px;
-
       overflow-wrap: anywhere;
     }
 
@@ -380,19 +305,16 @@
       margin: 0 0 20px;
     }
 
-    /* ------------------------------------
+    /* ========================================
        SHARING AND COMMENTS
-    ------------------------------------ */
+    ======================================== */
 
     .article-page .landing-section {
       margin-top: 25px;
-
       padding: clamp(18px, 3vw, 28px);
-
       border: 1px solid #eee5d4;
       border-radius: 14px;
-
-      background: #fff;
+      background: white;
     }
 
     .article-page .landing-section h2 {
@@ -416,9 +338,129 @@
       box-sizing: border-box;
     }
 
-    /* ------------------------------------
+    /* ========================================
+       TWO-SECOND BRANDED INTRO
+    ======================================== */
+
+    .news-intro {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+      box-sizing: border-box;
+
+      background: #171717;
+      overflow: hidden;
+
+      opacity: 1;
+      visibility: visible;
+
+      transition:
+        opacity .25s ease,
+        visibility .25s ease;
+    }
+
+    .news-intro[hidden] {
+      display: none !important;
+    }
+
+    .news-intro.is-closing {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .news-intro-image {
+      display: block;
+      width: min(100%, 960px);
+      height: auto;
+      max-height: calc(100dvh - 100px);
+
+      object-fit: contain;
+
+      border-radius: 12px;
+      background: #fffdf4;
+
+      box-shadow:
+        0 20px 70px rgba(0,0,0,.45);
+
+      transform-origin: center;
+
+      animation:
+        frank-news-zoom 2s ease-out forwards;
+    }
+
+    @keyframes frank-news-zoom {
+      0% {
+        transform: scale(.92);
+      }
+
+      100% {
+        transform: scale(1.08);
+      }
+    }
+
+    .news-intro-fallback {
+      display: none;
+      width: min(100%, 700px);
+      padding: 42px 18px;
+      box-sizing: border-box;
+      background: #ffe15c;
+      color: #171717;
+      text-align: center;
+      border-radius: 12px;
+
+      animation:
+        frank-news-zoom 2s ease-out forwards;
+    }
+
+    .news-intro-fallback strong {
+      display: block;
+      font-size: clamp(25px, 6vw, 50px);
+      line-height: 1.3;
+    }
+
+    .news-intro.is-fallback .news-intro-image {
+      display: none;
+    }
+
+    .news-intro.is-fallback .news-intro-fallback {
+      display: block;
+    }
+
+    .news-intro-skip {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+
+      z-index: 2;
+
+      padding: 11px 18px;
+
+      border: none;
+      border-radius: 999px;
+
+      background: #ffe15c;
+      color: #171717;
+
+      font-size: 14px;
+      font-weight: 800;
+
+      cursor: pointer;
+    }
+
+    .news-intro-skip:hover {
+      background: white;
+    }
+
+    /* ========================================
        MOBILE
-    ------------------------------------ */
+    ======================================== */
 
     @media (max-width: 700px) {
 
@@ -433,7 +475,6 @@
 
       .article-page .article-navigation {
         width: 100%;
-
         justify-content: flex-start;
         gap: 6px;
       }
@@ -476,6 +517,26 @@
       .article-page .landing-section {
         padding: 17px;
       }
+
+      .news-intro {
+        padding: 12px;
+      }
+
+      .news-intro-image {
+        max-height: calc(100dvh - 75px);
+      }
+
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .news-intro-image,
+      .news-intro-fallback {
+        animation: none !important;
+      }
+
+      .news-intro {
+        transition: none;
+      }
     }
 
   </style>
@@ -484,34 +545,67 @@
 
 <body class="article-page">
 
-  <!-- =====================================
-       TOP LOCATION BAR
-  ====================================== -->
+  <!-- ========================================
+       ARTICLE OPENING INTRO
 
-  <div class="topbar">
+       Runs when opening the article webpage.
+       Does not change WhatsApp image attachments.
+  ======================================== -->
 
-    <div class="wrap location-bar">
-      RWAMWANJA • KAMWENGE • UGANDA
+  <div
+    id="newsIntro"
+    class="news-intro"
+    hidden
+    aria-label="Opening news article"
+  >
+
+    <img
+      id="newsIntroImage"
+      class="news-intro-image"
+      alt="Branded NEWS article preview"
+    >
+
+    <div
+      class="news-intro-fallback"
+      aria-hidden="true"
+    >
+      <strong>#FrankMyMP</strong>
+      <strong>#FrankMyChoice</strong>
     </div>
+
+    <button
+      id="newsIntroSkip"
+      class="news-intro-skip"
+      type="button"
+    >
+      Skip Intro →
+    </button>
 
   </div>
 
-  <!-- =====================================
-       BRANDING AND SITE NAVIGATION
-  ====================================== -->
+  <!-- ========================================
+       TOP LOCATION BAR
+  ======================================== -->
+
+  <div class="topbar">
+    <div class="wrap location-bar">
+      RWAMWANJA • KAMWENGE • UGANDA
+    </div>
+  </div>
+
+  <!-- ========================================
+       MAIN HEADER
+  ======================================== -->
 
   <header class="header">
 
     <div class="wrap header-inner">
-
-      <!-- BRAND -->
 
       <a
         href="/"
         class="brand"
         aria-label="#FrankMyMP #FrankMyChoice homepage"
       >
-
         <span>
           <b class="red">#Frank</b>MyMP
         </span>
@@ -519,10 +613,7 @@
         <span>
           #Frank<b class="red">MyChoice</b>
         </span>
-
       </a>
-
-      <!-- MAIN NAVIGATION -->
 
       <nav
         class="article-navigation"
@@ -556,9 +647,9 @@
 
   </header>
 
-  <!-- =====================================
-       NEWS HEADER
-  ====================================== -->
+  <!-- ========================================
+       NEWS STRAP
+  ======================================== -->
 
   <section class="article-news-strap">
 
@@ -581,13 +672,11 @@
 
   </section>
 
-  <!-- =====================================
+  <!-- ========================================
        ARTICLE LANDING PAGE
-  ====================================== -->
+  ======================================== -->
 
   <main class="landing-main">
-
-    <!-- BREADCRUMB -->
 
     <nav
       class="article-breadcrumb"
@@ -616,38 +705,30 @@
 
     </nav>
 
-    <!-- PAGE HEADING -->
-
     <div class="article-page-heading">
-
       <h2>
         News Article
       </h2>
-
     </div>
 
-    <!-- ==================================
+    <!-- ====================================
          ARTICLE CONTENT
-
-         js/post.js populates this area
-         using Firebase Firestore.
-    =================================== -->
+         POPULATED BY js/post.js
+    ==================================== -->
 
     <div class="article-shell post-main">
 
       <div id="article">
-
         <div class="empty">
           Loading article…
         </div>
-
       </div>
 
     </div>
 
-    <!-- ==================================
+    <!-- ====================================
          ARTICLE SHARING
-    =================================== -->
+    ==================================== -->
 
     <section
       class="article-sharing landing-section hidden"
@@ -665,8 +746,6 @@
 
       <div class="share-buttons">
 
-        <!-- WHATSAPP -->
-
         <a
           id="shareWhatsApp"
           class="btn share-whatsapp"
@@ -676,8 +755,6 @@
         >
           WhatsApp
         </a>
-
-        <!-- FACEBOOK -->
 
         <a
           id="shareFacebook"
@@ -689,8 +766,6 @@
           Facebook
         </a>
 
-        <!-- X -->
-
         <a
           id="shareX"
           class="btn share-x"
@@ -700,8 +775,6 @@
         >
           X
         </a>
-
-        <!-- COPY LINK -->
 
         <button
           id="copyArticleLink"
@@ -722,9 +795,9 @@
 
     </section>
 
-    <!-- ==================================
+    <!-- ====================================
          READER COMMENTS
-    =================================== -->
+    ==================================== -->
 
     <section
       class="comments landing-section"
@@ -736,13 +809,10 @@
       </h2>
 
       <p class="muted">
-        Comments are reviewed before
-        being displayed. Please keep
-        your contribution respectful
-        and factual.
+        Comments are reviewed before being
+        displayed. Please keep your
+        contribution respectful and factual.
       </p>
-
-      <!-- APPROVED COMMENTS -->
 
       <div id="comments"></div>
 
@@ -750,14 +820,10 @@
         Leave a comment
       </h3>
 
-      <!-- COMMENT FORM -->
-
       <form
         class="form"
         id="commentForm"
       >
-
-        <!-- NAME -->
 
         <label for="commentName">
           Your name
@@ -773,8 +839,6 @@
           required
         >
 
-        <!-- COMMENT -->
-
         <label for="commentText">
           Comment
         </label>
@@ -788,7 +852,7 @@
           required
         ></textarea>
 
-        <!-- HONEYPOT -->
+        <!-- Spam protection honeypot -->
 
         <div
           class="hidden"
@@ -809,16 +873,12 @@
 
         </div>
 
-        <!-- SUBMIT -->
-
         <button
           class="btn"
           type="submit"
         >
           Submit for approval
         </button>
-
-        <!-- COMMENT STATUS -->
 
         <p
           id="commentStatus"
@@ -831,9 +891,7 @@
 
     </section>
 
-    <!-- ==================================
-         RETURN TO HOMEPAGE
-    =================================== -->
+    <!-- RETURN TO HOMEPAGE -->
 
     <div
       style="
@@ -854,9 +912,9 @@
 
   </main>
 
-  <!-- =====================================
+  <!-- ========================================
        FOOTER
-  ====================================== -->
+  ======================================== -->
 
   <footer class="footer">
 
@@ -874,16 +932,171 @@
 
   </footer>
 
-  <!-- =====================================
-       FIREBASE ARTICLE SCRIPT
+  <!-- ========================================
+       TWO-SECOND ZOOM INTRO SCRIPT
 
-       Preserves:
+       Reads the article's Open Graph image.
+
+       The static build inserts a different
+       og:image for each published article.
+
+       This creates the zoom effect without
+       another page or a redirect.
+  ======================================== -->
+
+  <script>
+    (() => {
+      "use strict";
+
+      const INTRO_DURATION = 2000;
+      const FADE_DURATION = 250;
+
+      const intro =
+        document.getElementById("newsIntro");
+
+      const introImage =
+        document.getElementById("newsIntroImage");
+
+      const skipButton =
+        document.getElementById("newsIntroSkip");
+
+      if (!intro || !introImage) {
+        return;
+      }
+
+      let closeTimer = null;
+      let fadeTimer = null;
+      let closed = false;
+
+      // Do not animate users who prefer
+      // reduced motion.
+
+      const reducedMotion =
+        window.matchMedia?.(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+      // Only animate actual article URLs.
+      // Example: /post/article-id/
+
+      const isArticleRoute =
+        /^\/post\/[^/]+\/?$/.test(
+          window.location.pathname
+        );
+
+      // Allow direct local post.html testing.
+
+      const isLocalArticle =
+        window.location.pathname.endsWith(
+          "/post.html"
+        ) &&
+        new URLSearchParams(
+          window.location.search
+        ).has("slug");
+
+      if (
+        reducedMotion ||
+        (!isArticleRoute && !isLocalArticle)
+      ) {
+        return;
+      }
+
+      // Find the image chosen for the current
+      // article by tools/build.mjs.
+
+      const ogImage = document.querySelector(
+        'meta[property="og:image"]'
+      );
+
+      const imageURL =
+        ogImage?.getAttribute("content")?.trim() ||
+        "";
+
+      function finishIntro() {
+        if (closed) {
+          return;
+        }
+
+        closed = true;
+
+        if (closeTimer) {
+          clearTimeout(closeTimer);
+        }
+
+        intro.classList.add(
+          "is-closing"
+        );
+
+        fadeTimer = setTimeout(() => {
+          intro.hidden = true;
+          introImage.removeAttribute("src");
+        }, FADE_DURATION);
+      }
+
+      function startIntro() {
+        intro.hidden = false;
+
+        closeTimer = setTimeout(
+          finishIntro,
+          INTRO_DURATION
+        );
+      }
+
+      skipButton?.addEventListener(
+        "click",
+        finishIntro
+      );
+
+      // If we have a generated NEWS Card,
+      // display it immediately.
+      //
+      // If loading fails, show the branded
+      // fallback rather than a broken image.
+
+      if (imageURL) {
+        introImage.addEventListener(
+          "error",
+          () => {
+            intro.classList.add(
+              "is-fallback"
+            );
+          },
+          { once: true }
+        );
+
+        introImage.src = imageURL;
+      } else {
+        intro.classList.add(
+          "is-fallback"
+        );
+      }
+
+      startIntro();
+
+      // Safety cleanup if page is left.
+
+      window.addEventListener(
+        "pagehide",
+        () => {
+          clearTimeout(closeTimer);
+          clearTimeout(fadeTimer);
+        },
+        { once: true }
+      );
+
+    })();
+  </script>
+
+  <!-- ========================================
+       EXISTING FIREBASE ARTICLE SCRIPT
+
+       KEEP:
        - Article loading
-       - Cloudinary photos
+       - Photos
        - Sharing
-       - Reader comments
+       - Comments
        - Visitor counting
-  ====================================== -->
+  ======================================== -->
 
   <script
     type="module"
@@ -891,5 +1104,4 @@
   ></script>
 
 </body>
-
 </html>

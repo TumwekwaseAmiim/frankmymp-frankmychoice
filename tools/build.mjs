@@ -1,31 +1,31 @@
 
 /* ==========================================================
    #FrankMyMP #FrankMyChoice
-   FINAL NEWS BUILD SYSTEM
+   COMPLETE NEWS BUILD SYSTEM
 
-   FULL-CLEAR-PHOTO EDITION
-
-   FEATURES
-   ----------------------------------------------------------
-   - Full-size, clear article photographs
-   - No blurred background
-   - No smaller foreground photograph
-   - Yellow/red NEWS branding
-   - Headline displayed over the photograph
-   - Automatic 1200 x 630 JPEG creation
-   - Firebase Firestore published news
-   - Individual static article landing pages
-   - WhatsApp, Facebook and X Open Graph metadata
-   - Article summaries preserved
-   - 10-day publication window
-   - Homepage metadata and sitemap
-   - Cloudflare Pages deployment
-   - Existing PWA, admin, CSS and JS preserved
-
-   Long WhatsApp text is handled by js/ui.js and js/post.js.
-   This build does not shorten those sharing messages.
+   LARGE-BRANDING EDITION
 
    Developer: Eng. Amiim Tumwekwase
+
+   Features:
+   - Large, readable NEWS branding
+   - Two prominent branded hashtags
+   - One clear article photograph
+   - No blurred or duplicate image
+   - Headline below photograph
+   - Short excerpt below headline
+   - Automatic branded JPEG creation
+   - Firebase Firestore news
+   - Static article landing pages
+   - Open Graph / WhatsApp metadata
+   - Twitter / X metadata
+   - 10-day publication window
+   - XML sitemap
+   - Existing PWA/admin files preserved
+
+   IMPORTANT:
+   Extended WhatsApp caption text is handled
+   by js/ui.js and js/post.js. It is unchanged.
 ========================================================== */
 
 import fs from "node:fs";
@@ -34,7 +34,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 // ==========================================================
-// DIRECTORIES
+// PATHS
 // ==========================================================
 
 const ROOT = path.resolve(
@@ -51,7 +51,7 @@ const SHARE_DIR = path.join(
 );
 
 // ==========================================================
-// WEBSITE CONFIGURATION
+// WEBSITE SETTINGS
 // ==========================================================
 
 const SITE_URL = (
@@ -69,24 +69,37 @@ const TEN_DAYS_MS =
   10 * 24 * 60 * 60 * 1000;
 
 // ==========================================================
-// IMAGE CONFIGURATION
+// FINAL IMAGE LAYOUT
 // ==========================================================
 
 const CARD_WIDTH = 1200;
 const CARD_HEIGHT = 630;
 
 // Must match js/ui.js.
-const DESIGN_VERSION = "fullphoto-v3";
+const DESIGN_VERSION = "brand100-v4";
+
+const HEADER_HEIGHT = 100;
+
+const PHOTO_TOP = 100;
+const PHOTO_HEIGHT = 340;
+
+const CONTENT_TOP = 440;
+const CONTENT_HEIGHT = 155;
+
+const FOOTER_TOP = 595;
+const FOOTER_HEIGHT = 35;
 
 const COLORS = {
   yellow: "#FFE15C",
   red: "#C91727",
   black: "#171717",
-  white: "#FFFFFF"
+  white: "#FFFFFF",
+  gray: "#525A63",
+  photoBackground: "#F3F0E8"
 };
 
 // ==========================================================
-// HTML ESCAPING
+// HTML AND TEXT HELPERS
 // ==========================================================
 
 function htmlEscape(value) {
@@ -97,10 +110,6 @@ function htmlEscape(value) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
-
-// ==========================================================
-// TEXT HELPERS
-// ==========================================================
 
 function cleanText(value) {
   return String(value ?? "")
@@ -158,7 +167,7 @@ function timestamp(value) {
 }
 
 // ==========================================================
-// ARTICLE IDENTIFIER
+// VALID ARTICLE ID
 // ==========================================================
 
 function validArticleId(value) {
@@ -169,7 +178,7 @@ function validArticleId(value) {
 }
 
 // ==========================================================
-// FIRST UPLOADED PHOTOGRAPH
+// FIRST ARTICLE PHOTOGRAPH
 // ==========================================================
 
 function imageUrl(post) {
@@ -200,26 +209,33 @@ function imageUrl(post) {
 }
 
 // ==========================================================
-// WRAP HEADLINE
+// TEXT WRAPPING
 // ==========================================================
 
-function wrapHeadline(
+function wrapText(
   value,
-  maximumCharacters = 50,
+  maximumCharacters = 56,
   maximumLines = 2
 ) {
-  const text = cleanText(value);
+  const original = cleanText(value);
 
-  if (!text) {
-    return ["News Update"];
+  if (!original) {
+    return [];
   }
 
-  const words = text.split(" ");
+  const words = original.split(" ");
   const lines = [];
 
   let current = "";
+  let index = 0;
 
-  for (const word of words) {
+  for (
+    ;
+    index < words.length;
+    index++
+  ) {
+    const word = words[index];
+
     const candidate = current
       ? current + " " + word
       : word;
@@ -233,14 +249,19 @@ function wrapHeadline(
 
     if (current) {
       lines.push(current);
+      current = "";
     }
 
-    if (lines.length >= maximumLines) {
-      current = "";
+    if (
+      lines.length >= maximumLines
+    ) {
       break;
     }
 
-    current = word;
+    current =
+      word.length > maximumCharacters
+        ? word.slice(0, maximumCharacters)
+        : word;
   }
 
   if (
@@ -252,19 +273,23 @@ function wrapHeadline(
 
   if (!lines.length) {
     lines.push(
-      text.slice(0, maximumCharacters)
+      original.slice(0, maximumCharacters)
     );
   }
 
-  const displayed = lines.join(" ");
+  const displayed =
+    lines.join(" ");
 
-  if (displayed.length < text.length) {
-    const index = lines.length - 1;
+  if (
+    displayed.length < original.length
+  ) {
+    const last =
+      lines.length - 1;
 
-    lines[index] =
-      lines[index]
+    lines[last] =
+      lines[last]
         .slice(0, maximumCharacters - 1)
-        .replace(/[.,;:\s]+$/, "") +
+        .replace(/[\s,;:.]+$/, "") +
       "…";
   }
 
@@ -272,44 +297,40 @@ function wrapHeadline(
 }
 
 // ==========================================================
-// SVG HEADLINE
+// SVG ARTICLE HEADLINE
 // ==========================================================
 
 function headlineSVG(title) {
-  const lines = wrapHeadline(
+  const lines = wrapText(
     title,
-    48,
+    52,
     2
   );
 
   const fontSize =
-    lines.length === 1 ? 42 : 37;
+    lines.length === 1 ? 37 : 33;
+
+  const lineHeight = 39;
 
   const startY =
-    lines.length === 1 ? 531 : 489;
-
-  const lineHeight = 46;
+    lines.length === 1 ? 490 : 475;
 
   return lines.map(
     (line, index) => `
       <text
-        x="38"
+        x="34"
         y="${startY + index * lineHeight}"
         font-family="Arial, Helvetica, sans-serif"
         font-size="${fontSize}"
         font-weight="800"
-        fill="${COLORS.white}"
-        stroke="#000000"
-        stroke-opacity="0.28"
-        stroke-width="1.3"
-        paint-order="stroke"
+        fill="${COLORS.black}"
       >${htmlEscape(line)}</text>
     `
   ).join("\n");
 }
 
 // ==========================================================
-// DOWNLOAD ARTICLE PHOTOGRAPH
+// DOWNLOAD CLOUDINARY PHOTOGRAPH
 // ==========================================================
 
 async function downloadPhoto(url) {
@@ -319,9 +340,12 @@ async function downloadPhoto(url) {
     );
   }
 
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(20000)
-  });
+  const response = await fetch(
+    url,
+    {
+      signal: AbortSignal.timeout(20000)
+    }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -334,19 +358,23 @@ async function downloadPhoto(url) {
     response.headers.get("content-type") || ""
   ).toLowerCase();
 
-  if (!contentType.startsWith("image/")) {
+  if (
+    !contentType.startsWith("image/")
+  ) {
     throw new Error(
-      "The photograph URL returned non-image content"
+      "Photo URL did not return an image"
     );
   }
 
-  const length = Number(
+  const declaredSize = Number(
     response.headers.get("content-length") || 0
   );
 
-  if (length > 15 * 1024 * 1024) {
+  if (
+    declaredSize > 15 * 1024 * 1024
+  ) {
     throw new Error(
-      "Photograph exceeds 15 MB"
+      "Photograph exceeds 15 MB limit"
     );
   }
 
@@ -367,42 +395,45 @@ async function downloadPhoto(url) {
 }
 
 // ==========================================================
-// GENERATE FULL-PHOTO NEWS CARD
+// GENERATE FINAL NEWS CARD
 //
-// ONE PHOTOGRAPH ONLY
+// 1200 x 630
 //
-// - Full canvas photographic background
-// - No blur
-// - No second foreground image
-// - Thin NEWS branding at top
-// - Dark gradient behind headline for readability
-// - Slim website footer
+// 100px - LARGE BRAND HEADER
+// 340px - CLEAR PHOTOGRAPH
+// 155px - HEADLINE AND EXCERPT
+//  35px - WEBSITE FOOTER
 //
-// fit: cover fills the canvas.
-// It can crop edges of portrait or square photos,
-// but does not blur or stretch the photograph.
+// No blur.
+// No duplicate photograph.
+// No text over the main photograph.
 // ==========================================================
 
 async function generateShareCard(
   post,
   outputFile
 ) {
-  const sourceURL = imageUrl(post);
+  const originalPhoto =
+    imageUrl(post);
 
-  if (!sourceURL) {
+  if (!originalPhoto) {
     throw new Error(
-      "No uploaded photograph"
+      "No photograph attached to article"
     );
   }
 
   const sourceBuffer =
-    await downloadPhoto(sourceURL);
+    await downloadPhoto(originalPhoto);
 
   // ========================================
-  // FULL-CANVAS SHARP PHOTOGRAPH
+  // STEP 1: PREPARE SINGLE CLEAR PHOTO
+  //
+  // "contain" prevents cropping.
+  // Empty space receives a solid color.
+  // No blur and no second image.
   // ========================================
 
-  const background = await sharp(
+  const photoArea = await sharp(
     sourceBuffer,
     {
       limitInputPixels: 40000000
@@ -411,31 +442,94 @@ async function generateShareCard(
     .rotate()
     .resize({
       width: CARD_WIDTH,
-      height: CARD_HEIGHT,
-      fit: "cover",
-      position: "attention"
+      height: PHOTO_HEIGHT,
+      fit: "contain",
+      background: COLORS.photoBackground
     })
-    .jpeg({
-      quality: 90
+    .flatten({
+      background: COLORS.photoBackground
     })
+    .png()
     .toBuffer();
 
   // ========================================
-  // ARTICLE HEADLINE
+  // STEP 2: CREATE BASE CANVAS
   // ========================================
 
-  const title =
-    post.title || "News Update";
-
-  const renderedHeadline =
-    headlineSVG(title);
+  const imageBase = await sharp({
+    create: {
+      width: CARD_WIDTH,
+      height: CARD_HEIGHT,
+      channels: 4,
+      background: COLORS.white
+    }
+  })
+    .composite([
+      {
+        input: photoArea,
+        left: 0,
+        top: PHOTO_TOP
+      }
+    ])
+    .png()
+    .toBuffer();
 
   // ========================================
-  // BRANDING OVERLAY
+  // STEP 3: ARTICLE TEXT
+  // ========================================
+
+  const headline = cleanText(
+    post.title || "News Update"
+  );
+
+  const shortDescription = excerpt(
+    post.excerpt ||
+    post.body ||
+    "",
+    125
+  );
+
+  const headlineLines =
+    wrapText(headline, 52, 2);
+
+  const descriptionLines =
+    wrapText(shortDescription, 105, 2);
+
+  // Adjust excerpt position depending
+  // on whether headline uses one or two lines.
+
+  const descriptionY =
+    headlineLines.length === 1
+      ? 526
+      : 548;
+
+  const descriptionSize =
+    headlineLines.length === 1
+      ? 21
+      : 18;
+
+  const descriptionSVG =
+    descriptionLines.map(
+      (line, index) => `
+        <text
+          x="35"
+          y="${descriptionY + index * 23}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${descriptionSize}"
+          font-weight="500"
+          fill="${COLORS.gray}"
+        >${htmlEscape(line)}</text>
+      `
+    ).join("\n");
+
+  // ========================================
+  // STEP 4: LARGE BRANDING
   //
-  // The middle photo area stays clear.
-  // The dark gradient only improves
-  // headline readability near the bottom.
+  // NEWS is large on the left.
+  // Hashtags are large on two lines.
+  //
+  // Designed to improve legibility
+  // in WhatsApp previews.
   // ========================================
 
   const overlaySVG = `
@@ -446,49 +540,13 @@ async function generateShareCard(
     viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}"
   >
 
-    <defs>
-      <linearGradient
-        id="headlineShade"
-        x1="0"
-        y1="0"
-        x2="0"
-        y2="1"
-      >
-        <stop
-          offset="0%"
-          stop-color="#000000"
-          stop-opacity="0"
-        />
-        <stop
-          offset="48%"
-          stop-color="#000000"
-          stop-opacity="0.12"
-        />
-        <stop
-          offset="100%"
-          stop-color="#000000"
-          stop-opacity="0.86"
-        />
-      </linearGradient>
-    </defs>
-
-    <!-- BOTTOM HEADLINE GRADIENT -->
-
-    <rect
-      x="0"
-      y="315"
-      width="${CARD_WIDTH}"
-      height="279"
-      fill="url(#headlineShade)"
-    />
-
-    <!-- YELLOW NEWS MASTHEAD -->
+    <!-- LARGE YELLOW HEADER -->
 
     <rect
       x="0"
       y="0"
       width="${CARD_WIDTH}"
-      height="55"
+      height="${HEADER_HEIGHT}"
       fill="${COLORS.yellow}"
     />
 
@@ -497,50 +555,85 @@ async function generateShareCard(
     <rect
       x="0"
       y="0"
-      width="136"
-      height="55"
+      width="230"
+      height="${HEADER_HEIGHT}"
       fill="${COLORS.red}"
     />
 
     <text
-      x="68"
-      y="37"
+      x="115"
+      y="65"
       text-anchor="middle"
       font-family="Arial, Helvetica, sans-serif"
-      font-size="27"
-      font-weight="800"
+      font-size="59"
+      font-weight="900"
       fill="${COLORS.white}"
     >NEWS</text>
 
-    <!-- WEBSITE BRAND -->
+    <!-- BRAND: LINE 1 -->
 
     <text
-      x="160"
-      y="37"
+      x="270"
+      y="46"
       font-family="Arial, Helvetica, sans-serif"
-      font-size="27"
-      font-weight="800"
-    >
-      <tspan fill="${COLORS.red}">#Frank</tspan><tspan fill="${COLORS.black}">MyMP</tspan>
-      <tspan fill="${COLORS.black}">   #Frank</tspan><tspan fill="${COLORS.red}">MyChoice</tspan>
-    </text>
+      font-size="44"
+      font-weight="900"
+      fill="${COLORS.black}"
+    >#FrankMyMP</text>
 
-    <!-- ARTICLE HEADLINE -->
+    <!-- BRAND: LINE 2 -->
 
-    ${renderedHeadline}
+    <text
+      x="270"
+      y="90"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="44"
+      font-weight="900"
+      fill="${COLORS.red}"
+    >#FrankMyChoice</text>
 
-    <!-- WEBSITE FOOTER -->
+    <!-- CLEAR PHOTO IS AT Y=100 TO Y=440 -->
+
+    <!-- WHITE HEADLINE PANEL -->
 
     <rect
       x="0"
-      y="594"
+      y="${CONTENT_TOP}"
       width="${CARD_WIDTH}"
-      height="36"
+      height="${CONTENT_HEIGHT}"
+      fill="${COLORS.white}"
+    />
+
+    <!-- THIN RED ACCENT -->
+
+    <rect
+      x="0"
+      y="${CONTENT_TOP}"
+      width="${CARD_WIDTH}"
+      height="5"
+      fill="${COLORS.red}"
+    />
+
+    <!-- ARTICLE HEADLINE -->
+
+    ${headlineSVG(headline)}
+
+    <!-- SHORT EXCERPT -->
+
+    ${descriptionSVG}
+
+    <!-- FOOTER -->
+
+    <rect
+      x="0"
+      y="${FOOTER_TOP}"
+      width="${CARD_WIDTH}"
+      height="${FOOTER_HEIGHT}"
       fill="${COLORS.yellow}"
     />
 
     <text
-      x="32"
+      x="30"
       y="618"
       font-family="Arial, Helvetica, sans-serif"
       font-size="18"
@@ -562,19 +655,19 @@ async function generateShareCard(
   `;
 
   // ========================================
-  // COMPOSITE AND EXPORT JPEG
+  // STEP 5: EXPORT BRANDED JPEG
   // ========================================
 
-  await sharp(background)
+  await sharp(imageBase)
     .composite([
       {
         input: Buffer.from(overlaySVG),
-        top: 0,
-        left: 0
+        left: 0,
+        top: 0
       }
     ])
     .jpeg({
-      quality: 85,
+      quality: 90,
       mozjpeg: true
     })
     .toFile(outputFile);
@@ -583,13 +676,7 @@ async function generateShareCard(
 }
 
 // ==========================================================
-// OPEN GRAPH METADATA
-//
-// Preserves article headline,
-// short description and clickable link.
-//
-// WhatsApp's message text is separate and
-// remains controlled by js/ui.js and js/post.js.
+// SOCIAL MEDIA METADATA
 // ==========================================================
 
 function socialMeta(data) {
@@ -618,7 +705,10 @@ function socialMeta(data) {
   content="${description}"
 >
 
-<meta property="og:type" content="${type}">
+<meta
+  property="og:type"
+  content="${type}"
+>
 
 <meta
   property="og:site_name"
@@ -694,23 +784,22 @@ ${data.brandedImage ? `
   content="${description}"
 >
 
-<link rel="canonical" href="${url}">
+<link
+  rel="canonical"
+  href="${url}"
+>
 `.trim();
 }
 
 // ==========================================================
-// INJECT AUTHORITATIVE ARTICLE META TAGS
+// INJECT PAGE METADATA
 // ==========================================================
 
 function inject(html, metadata) {
-  // Remove old title tags.
-
   html = html.replace(
     /<title\b[^>]*>[\s\S]*?<\/title>/gi,
     ""
   );
-
-  // Remove old description and social tags.
 
   html = html.replace(
     /<meta\b[^>]*>/gi,
@@ -722,17 +811,17 @@ function inject(html, metadata) {
       const property =
         match?.[1]?.toLowerCase() || "";
 
-      return (
+      if (
         property === "description" ||
         property.startsWith("og:") ||
         property.startsWith("twitter:")
-      )
-        ? ""
-        : tag;
+      ) {
+        return "";
+      }
+
+      return tag;
     }
   );
-
-  // Remove outdated canonical tags.
 
   html = html.replace(
     /<link\b[^>]*>/gi,
@@ -744,7 +833,7 @@ function inject(html, metadata) {
 
   if (!/<\/head>/i.test(html)) {
     throw new Error(
-      "HTML template is missing </head>"
+      "HTML template does not contain </head>"
     );
   }
 
@@ -755,7 +844,7 @@ function inject(html, metadata) {
 }
 
 // ==========================================================
-// PREPARE DIST FOLDER
+// CREATE CLEAN OUTPUT DIRECTORY
 // ==========================================================
 
 fs.rmSync(DIST, {
@@ -768,7 +857,7 @@ fs.mkdirSync(DIST, {
 });
 
 // ==========================================================
-// COPY WEBSITE AND PWA FILES
+// PRESERVE PUBLIC WEBSITE AND ADMIN
 // ==========================================================
 
 const essentialFiles = [
@@ -783,10 +872,7 @@ const essentialFiles = [
 ];
 
 for (const item of essentialFiles) {
-  const source = path.join(
-    ROOT,
-    item
-  );
+  const source = path.join(ROOT, item);
 
   if (!fs.existsSync(source)) {
     throw new Error(
@@ -803,10 +889,6 @@ for (const item of essentialFiles) {
   );
 }
 
-// ==========================================================
-// GENERATED IMAGE DIRECTORY
-// ==========================================================
-
 fs.mkdirSync(
   SHARE_DIR,
   {
@@ -815,7 +897,7 @@ fs.mkdirSync(
 );
 
 // ==========================================================
-// FIREBASE CREDENTIAL CHECK
+// FIREBASE SERVICE ACCOUNT
 // ==========================================================
 
 if (
@@ -825,7 +907,7 @@ if (
     process.env.BUILD_WITHOUT_FIREBASE === "1"
   ) {
     console.warn(
-      "Local diagnostic build only: Firebase articles and share images were not generated."
+      "Local diagnostic build only: Firebase articles and branded images were not generated."
     );
 
     process.exit(0);
@@ -837,7 +919,7 @@ if (
 }
 
 // ==========================================================
-// CONNECT FIREBASE ADMIN
+// CONNECT FIREBASE
 // ==========================================================
 
 const { default: admin } =
@@ -855,7 +937,7 @@ if (!admin.apps.length) {
 }
 
 // ==========================================================
-// LOAD PUBLISHED NEWS
+// FETCH RECENT PUBLISHED NEWS
 // ==========================================================
 
 const snapshot = await admin
@@ -894,7 +976,7 @@ const posts = snapshot.docs
   );
 
 // ==========================================================
-// ARTICLE LANDING-PAGE TEMPLATE
+// ARTICLE TEMPLATE
 // ==========================================================
 
 const articleTemplate =
@@ -912,13 +994,13 @@ let homepageImage = "";
 let homepageImageBranded = false;
 
 // ==========================================================
-// GENERATE EVERY ARTICLE
+// GENERATE ARTICLES AND NEWS IMAGES
 // ==========================================================
 
 for (const post of posts) {
   if (!validArticleId(post.id)) {
     console.warn(
-      "Skipping invalid article ID:",
+      "Skipping unsupported article ID:",
       post.id
     );
 
@@ -951,18 +1033,17 @@ for (const post of posts) {
   let brandedImage = false;
 
   // ========================================
-  // GENERATE FULL-PHOTO SOCIAL IMAGE
+  // GENERATE LARGE-BRANDING NEWS IMAGE
   // ========================================
 
   if (originalPhoto) {
     const filename =
       `${post.id}-${DESIGN_VERSION}.jpg`;
 
-    const destination =
-      path.join(
-        SHARE_DIR,
-        filename
-      );
+    const destination = path.join(
+      SHARE_DIR,
+      filename
+    );
 
     try {
       await generateShareCard(
@@ -974,15 +1055,14 @@ for (const post of posts) {
         `${SITE_URL}/assets/share/${encodeURIComponent(filename)}`;
 
       brandedImage = true;
+
       brandedCount++;
 
     } catch (error) {
       console.warn(
-        `NEWS image generation failed for ${post.id}:`,
+        `Share image failed for ${post.id}:`,
         error.message
       );
-
-      // Keep original photo as fallback.
 
       previewImage =
         originalPhoto;
@@ -990,7 +1070,7 @@ for (const post of posts) {
   }
 
   // ========================================
-  // INDIVIDUAL ARTICLE HTML
+  // CREATE ARTICLE HTML
   // ========================================
 
   const articleHTML = inject(
@@ -1005,12 +1085,11 @@ for (const post of posts) {
     }
   );
 
-  const articleDirectory =
-    path.join(
-      DIST,
-      "post",
-      post.id
-    );
+  const articleDirectory = path.join(
+    DIST,
+    "post",
+    post.id
+  );
 
   fs.mkdirSync(
     articleDirectory,
@@ -1036,6 +1115,7 @@ for (const post of posts) {
     previewImage
   ) {
     homepageImage = previewImage;
+
     homepageImageBranded =
       brandedImage;
   }
@@ -1045,16 +1125,16 @@ for (const post of posts) {
   console.log(
     `Generated ${post.id}: ${
       brandedImage
-        ? "FULL CLEAR PHOTO"
+        ? "large branding NEWS preview"
         : previewImage
           ? "original photo fallback"
-          : "no photo"
+          : "no image"
     }`
   );
 }
 
 // ==========================================================
-// HOMEPAGE SOCIAL META
+// HOMEPAGE META TAGS
 // ==========================================================
 
 const homepageTemplate =
@@ -1076,15 +1156,12 @@ const homepageHTML = inject(
 );
 
 fs.writeFileSync(
-  path.join(
-    DIST,
-    "index.html"
-  ),
+  path.join(DIST, "index.html"),
   homepageHTML
 );
 
 // ==========================================================
-// XML SITEMAP
+// SITEMAP
 // ==========================================================
 
 const sitemap = [
@@ -1102,10 +1179,7 @@ const sitemap = [
 ].join("");
 
 fs.writeFileSync(
-  path.join(
-    DIST,
-    "sitemap.xml"
-  ),
+  path.join(DIST, "sitemap.xml"),
   sitemap
 );
 
@@ -1122,17 +1196,27 @@ console.log(
 );
 
 console.log(
-  "Image design:",
-  "FULL CLEAR PHOTO"
+  "Design:",
+  "LARGE BRANDING NEWS CARD"
 );
 
 console.log(
-  "Blurred backgrounds:",
+  "Header height:",
+  HEADER_HEIGHT + "px"
+);
+
+console.log(
+  "Photo height:",
+  PHOTO_HEIGHT + "px"
+);
+
+console.log(
+  "Blur:",
   "NONE"
 );
 
 console.log(
-  "Foreground duplicate photos:",
+  "Duplicate photo:",
   "NONE"
 );
 
@@ -1147,12 +1231,12 @@ console.log(
 );
 
 console.log(
-  "Website URL:",
+  "Website:",
   SITE_URL
 );
 
 console.log(
-  "Output directory:",
+  "Output:",
   DIST
 );
 

@@ -1,12 +1,16 @@
+
 {
+  "id": "/",
   "name": "#FrankMyMP #FrankMyChoice",
   "short_name": "FrankMyMP",
-  "description": "News and updates \u2014 #FrankMyMP #FrankMyChoice",
+  "description": "News and updates — #FrankMyMP #FrankMyChoice",
+  "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFD800",
+  "orientation": "any",
   "icons": [
     {
       "src": "/assets/icons/icon-192.png",

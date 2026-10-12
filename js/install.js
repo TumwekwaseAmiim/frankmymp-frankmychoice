@@ -1,15 +1,15 @@
 
 /* =====================================================
    #FrankMyMP #FrankMyChoice
-   PWA Installation Controller
+   PWA INSTALLATION CONTROLLER
 
    Features:
-   - Show Install App on normal website
-   - Chrome / Edge installation prompt
-   - Android manual installation instructions
-   - iPhone / iPad installation instructions
-   - Hide inside installed application
-   - Hide after successful installation
+   - Visible Install App button on website
+   - Native Chrome / Edge installation prompt
+   - Short fallback messages
+   - Android and iOS support
+   - Detect installed application
+   - Hide button inside installed app
    - Service worker registration
 ===================================================== */
 
@@ -17,7 +17,7 @@
   "use strict";
 
   // ==========================================
-  // ELEMENTS
+  // PAGE ELEMENTS
   // ==========================================
 
   const installButton =
@@ -32,33 +32,50 @@
   const closeNotice =
     document.getElementById("closeInstallNotice");
 
-  if (!installButton) return;
+  if (!installButton) {
+    console.warn(
+      "Install App button was not found."
+    );
+    return;
+  }
 
   // ==========================================
-  // STATE
+  // INSTALLATION STATE
   // ==========================================
 
   let deferredPrompt = null;
   let installedThisSession = false;
+  let promptInProgress = false;
 
   // ==========================================
-  // DEVICE DETECTION
+  // DEVICE AND BROWSER DETECTION
   // ==========================================
+
+  const userAgent = navigator.userAgent || "";
 
   const isIOS =
-    /iphone|ipad|ipod/i.test(
-      navigator.userAgent
-    ) ||
+    /iphone|ipad|ipod/i.test(userAgent) ||
     (
       navigator.platform === "MacIntel" &&
       navigator.maxTouchPoints > 1
     );
 
   const isAndroid =
-    /android/i.test(navigator.userAgent);
+    /android/i.test(userAgent);
+
+  const isChrome =
+    (
+      /Chrome|CriOS/i.test(userAgent)
+    ) &&
+    !/Edg|EdgiOS|OPR|Opera|SamsungBrowser/i.test(
+      userAgent
+    );
+
+  const isEdge =
+    /Edg|EdgiOS/i.test(userAgent);
 
   // ==========================================
-  // DETECT INSTALLED APP MODE
+  // DETECT INSTALLED APPLICATION
   // ==========================================
 
   function isStandalone() {
@@ -74,12 +91,12 @@
   }
 
   // ==========================================
-  // SHOW / HIDE INSTALL BUTTON
+  // INSTALL BUTTON VISIBILITY
   // ==========================================
 
   function hideInstallButton() {
-    installButton.classList.add("hidden");
     installButton.hidden = true;
+    installButton.classList.add("hidden");
   }
 
   function showInstallButton() {
@@ -88,7 +105,6 @@
   }
 
   function updateInstallButton() {
-
     if (
       isStandalone() ||
       installedThisSession
@@ -97,8 +113,6 @@
       return;
     }
 
-    // Show to visitors opening the website
-    // normally, even without an install prompt.
     showInstallButton();
   }
 
@@ -107,8 +121,10 @@
   // ==========================================
 
   function showNotice(text) {
-
     if (!notice || !noticeText) {
+      // Fallback when the notice panel
+      // is missing from HTML.
+      console.info(text);
       return;
     }
 
@@ -117,26 +133,31 @@
   }
 
   function hideNotice() {
-
     if (notice) {
       notice.hidden = true;
     }
   }
 
   // ==========================================
-  // INSTALLATION AVAILABILITY
+  // NATIVE INSTALLATION AVAILABILITY
   // ==========================================
 
   window.addEventListener(
     "beforeinstallprompt",
     event => {
+      // Store the browser-provided event so
+      // we can show the native prompt on click.
 
-      // Save browser installation event.
       event.preventDefault();
 
       deferredPrompt = event;
 
+      hideNotice();
       updateInstallButton();
+
+      console.log(
+        "Native installation prompt available."
+      );
     }
   );
 
@@ -147,40 +168,89 @@
   window.addEventListener(
     "appinstalled",
     () => {
-
       installedThisSession = true;
       deferredPrompt = null;
+      promptInProgress = false;
 
-      hideInstallButton();
       hideNotice();
+      hideInstallButton();
 
       console.log(
-        "FrankMyMP application installed."
+        "#FrankMyMP #FrankMyChoice installed."
       );
     }
   );
 
   // ==========================================
-  // APP DISPLAY MODE CHANGES
+  // DETECT DISPLAY MODE CHANGES
   // ==========================================
 
-  const displayMode = window.matchMedia(
+  const standaloneMedia = window.matchMedia(
     "(display-mode: standalone)"
   );
 
-  if (displayMode.addEventListener) {
-
-    displayMode.addEventListener(
+  if (standaloneMedia.addEventListener) {
+    standaloneMedia.addEventListener(
       "change",
       updateInstallButton
     );
-
-  } else if (displayMode.addListener) {
-
-    displayMode.addListener(
+  } else if (standaloneMedia.addListener) {
+    standaloneMedia.addListener(
       updateInstallButton
     );
+  }
 
+  // ==========================================
+  // INSTALLATION FALLBACK MESSAGE
+  // ==========================================
+
+  function showInstallationUnavailable() {
+    // iPhone/iPad installation typically uses
+    // Safari's Add to Home Screen feature.
+
+    if (isIOS) {
+      showNotice(
+        "To install this app on iPhone or iPad, open the website in Safari and choose Share → Add to Home Screen."
+      );
+
+      return;
+    }
+
+    // Chrome on Android or desktop.
+
+    if (isChrome) {
+      showNotice(
+        "Installation is not available right now. Check that Chrome is updated and allows app installation, then try again."
+      );
+
+      return;
+    }
+
+    // Microsoft Edge.
+
+    if (isEdge) {
+      showNotice(
+        "Installation is not available right now. Check your browser settings or try again using the latest version of Edge."
+      );
+
+      return;
+    }
+
+    // Other Android browsers.
+
+    if (isAndroid) {
+      showNotice(
+        "Your browser has not offered app installation. Try opening this website in the latest version of Chrome."
+      );
+
+      return;
+    }
+
+    // Other desktop browsers.
+
+    showNotice(
+      "App installation is unavailable in this browser. Try Chrome or Microsoft Edge, or check whether your browser supports installing web apps."
+    );
   }
 
   // ==========================================
@@ -190,56 +260,60 @@
   installButton.addEventListener(
     "click",
     async () => {
-
-      if (isStandalone()) {
+      if (
+        isStandalone() ||
+        installedThisSession
+      ) {
         hideInstallButton();
         return;
       }
 
+      if (promptInProgress) {
+        return;
+      }
+
+      hideNotice();
+
       // ======================================
-      // CHROME / EDGE INSTALLATION PROMPT
+      // NATIVE BROWSER INSTALL PROMPT
       // ======================================
 
       if (deferredPrompt) {
+        promptInProgress = true;
 
         const promptEvent = deferredPrompt;
 
+        // Browsers generally allow this
+        // prompt event to be used only once.
         deferredPrompt = null;
 
         try {
-
           await promptEvent.prompt();
 
           const choice =
             await promptEvent.userChoice;
 
-          if (
-            choice?.outcome === "accepted"
-          ) {
-
-            // Wait for appinstalled confirmation.
-            // Avoid immediately claiming the
-            // installation was completed.
-
-            hideInstallButton();
-
+          if (choice?.outcome === "accepted") {
+            // The user accepted the browser
+            // prompt. Wait for appinstalled
+            // to confirm installation.
+            console.log(
+              "User accepted installation prompt."
+            );
           } else {
-
-            updateInstallButton();
-
+            console.log(
+              "User dismissed installation prompt."
+            );
           }
-
         } catch (error) {
-
           console.warn(
-            "Installation prompt unavailable:",
+            "Native installation prompt failed:",
             error
           );
 
-          showNotice(
-            "Open your browser menu and choose Install app or Add to Home Screen, if available."
-          );
-
+          showInstallationUnavailable();
+        } finally {
+          promptInProgress = false;
           updateInstallButton();
         }
 
@@ -247,44 +321,15 @@
       }
 
       // ======================================
-      // IPHONE / IPAD
+      // NO NATIVE PROMPT AVAILABLE
       // ======================================
 
-      if (isIOS) {
-
-        showNotice(
-          "On iPhone or iPad, open this website in Safari, tap the Share button, choose Add to Home Screen, then tap Add."
-        );
-
-        return;
-      }
-
-      // ======================================
-      // ANDROID
-      // ======================================
-
-      if (isAndroid) {
-
-        showNotice(
-          "On Android, open this website in Chrome, tap the three-dot menu (⋮), then choose Install app or Add to Home Screen."
-        );
-
-        return;
-      }
-
-      // ======================================
-      // WINDOWS / MAC / OTHER BROWSERS
-      // ======================================
-
-      showNotice(
-        "To install this website, look for Install app in your browser's address bar or menu. If it is unavailable, use a supported browser such as Chrome or Edge."
-      );
-
+      showInstallationUnavailable();
     }
   );
 
   // ==========================================
-  // CLOSE INSTALL NOTICE
+  // CLOSE NOTICE
   // ==========================================
 
   closeNotice?.addEventListener(
@@ -295,16 +340,14 @@
   document.addEventListener(
     "keydown",
     event => {
-
       if (event.key === "Escape") {
         hideNotice();
       }
-
     }
   );
 
   // ==========================================
-  // INITIALIZE BUTTON
+  // INITIALIZE INSTALL BUTTON
   // ==========================================
 
   updateInstallButton();
@@ -317,17 +360,17 @@
     "serviceWorker" in navigator &&
     window.isSecureContext
   ) {
-
     window.addEventListener(
       "load",
       async () => {
-
         try {
-
           const registration =
             await navigator.serviceWorker.register(
               "/sw.js",
-              { scope: "/" }
+              {
+                scope: "/",
+                updateViaCache: "none"
+              }
             );
 
           console.log(
@@ -335,18 +378,23 @@
             registration.scope
           );
 
+          // Ask the browser to look for an
+          // updated service worker.
+          registration.update().catch(
+            error => {
+              console.warn(
+                "Service worker update check:",
+                error
+              );
+            }
+          );
         } catch (error) {
-
           console.warn(
             "Service worker registration failed:",
-            error.message
+            error
           );
-
         }
-
       }
     );
-
   }
-
 })();

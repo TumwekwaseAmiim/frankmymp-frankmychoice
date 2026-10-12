@@ -1,0 +1,20 @@
+name: Refresh News Link Previews
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger secure Cloudflare Pages rebuild
+        env:
+          DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo 'Missing GitHub secret CLOUDFLARE_PAGES_DEPLOY_HOOK' >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --retry 2 --max-time 30 -X POST "$DEPLOY_HOOK"

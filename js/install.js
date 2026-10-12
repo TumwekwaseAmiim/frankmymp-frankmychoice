@@ -220,7 +220,7 @@
 
     if (isChrome) {
       showNotice(
-        "Installation is not available right now. Check that Chrome is updated and allows app installation, then try again."
+        "Chrome has not offered installation yet. Check that your browser is updated and supports app installation, then retry."
       );
 
       return;

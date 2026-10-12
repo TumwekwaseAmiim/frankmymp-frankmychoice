@@ -37,7 +37,7 @@
   >
 
   <!-- SOCIAL SHARING FALLBACKS
-       The Cloudflare build replaces these
+       Cloudflare build replaces these
        with metadata from the latest news. -->
 
   <meta property="og:type" content="website">
@@ -106,6 +106,51 @@
   >
 
   <style>
+
+    /* ========================================
+       FINAL LOCATION BAR BRANDING
+
+       YELLOW LOCATIONS
+       RED DIAMOND SEPARATORS
+       DARK BACKGROUND
+    ======================================== */
+
+    .topbar {
+      background: #171717;
+    }
+
+    .topbar .location-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      box-sizing: border-box;
+    }
+
+    .location-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      color: #FFE15C;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.5;
+      letter-spacing: 1.5px;
+      text-align: center;
+    }
+
+    .location-separator {
+      color: #C91727;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
     /* ========================================
        INSTALL APP BUTTON
     ======================================== */
@@ -154,7 +199,9 @@
 
     /* ========================================
        HEADER ACTIONS
-       Install button stays OUTSIDE nav.
+
+       Install App remains outside nav,
+       preserving mobile visibility.
     ======================================== */
 
     .header-actions {
@@ -225,6 +272,7 @@
     ======================================== */
 
     @media (max-width: 800px) {
+
       .header-inner {
         display: flex;
         align-items: center;
@@ -265,11 +313,25 @@
       .header-actions .nav-toggle {
         margin: 0;
       }
+
     }
 
-    /* SMALL PHONE SCREENS */
+    /* ========================================
+       SMALL PHONE SCREENS
+    ======================================== */
 
     @media (max-width: 390px) {
+
+      .location-brand {
+        gap: 6px;
+        font-size: 10px;
+        letter-spacing: 0.8px;
+      }
+
+      .location-separator {
+        font-size: 8px;
+      }
+
       .header-actions {
         gap: 5px;
       }
@@ -282,28 +344,53 @@
       .header-inner .brand {
         font-size: 17px;
       }
+
     }
 
     @media (prefers-reduced-motion: reduce) {
+
       .install-app-btn {
         transition: none;
       }
+
     }
+
   </style>
+
 </head>
 
 <body>
 
   <!-- ======================================
-       LOCATION BAR
+       PREMIUM LOCATION BAR
   ====================================== -->
 
   <div class="topbar">
+
     <div class="wrap location-bar">
-      <span>
-        RWAMWANJA • KAMWENGE • UGANDA
+
+      <span class="location-brand">
+
+        <span>RWAMWANJA</span>
+
+        <span
+          class="location-separator"
+          aria-hidden="true"
+        >◆</span>
+
+        <span>KAMWENGE</span>
+
+        <span
+          class="location-separator"
+          aria-hidden="true"
+        >◆</span>
+
+        <span>UGANDA</span>
+
       </span>
+
     </div>
+
   </div>
 
   <!-- ======================================
@@ -311,9 +398,12 @@
   ====================================== -->
 
   <header class="header">
+
     <div class="wrap header-inner">
 
-      <!-- BRAND -->
+      <!-- ==================================
+           BRAND + NRM LOGO
+      =================================== -->
 
       <a
         href="/"
@@ -330,6 +420,7 @@
         >
 
         <div class="brand">
+
           <span>
             <b class="red">#Frank</b>MyMP
           </span>
@@ -337,6 +428,7 @@
           <span>
             #Frank<b class="red">MyChoice</b>
           </span>
+
         </div>
 
       </a>
@@ -344,9 +436,7 @@
       <!-- ==================================
            HEADER ACTIONS
 
-           IMPORTANT:
-           Install App is outside #nav,
-           so it is visible on mobile.
+           Install App remains outside nav.
       =================================== -->
 
       <div class="header-actions">
@@ -357,8 +447,10 @@
           type="button"
           aria-label="Install FrankMyMP application"
         >
+
           <span aria-hidden="true">↓</span>
           Install App
+
         </button>
 
         <button
@@ -374,7 +466,9 @@
 
       </div>
 
-      <!-- NAVIGATION -->
+      <!-- ==================================
+           MAIN NAVIGATION
+      =================================== -->
 
       <nav
         class="nav"
@@ -418,6 +512,7 @@
       </nav>
 
     </div>
+
   </header>
 
   <!-- ======================================
@@ -506,9 +601,11 @@
         id="featured"
         class="feature-grid"
       >
+
         <div class="empty">
           Loading featured news…
         </div>
+
       </div>
 
     </section>
@@ -578,9 +675,11 @@
         id="news"
         class="news-grid"
       >
+
         <div class="empty">
           Loading news…
         </div>
+
       </div>
 
       <button
@@ -640,14 +739,18 @@
 
   </footer>
 
-  <!-- FIREBASE NEWS -->
+  <!-- ======================================
+       FIREBASE NEWS
+  ====================================== -->
 
   <script
     type="module"
     src="/js/home.js"
   ></script>
 
-  <!-- PWA INSTALLATION -->
+  <!-- ======================================
+       PWA INSTALLATION
+  ====================================== -->
 
   <script
     defer

@@ -1,0 +1,542 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <!-- APP NAME -->
+
+  <title>
+    #FrankMyMP #FrankMyChoice | News & Updates
+  </title>
+
+  <meta
+    name="description"
+    content="Latest news, public statements, achievements and evidence-based clarifications relating to Hon. Frank Tumwebaze. Rwamwanja, Kamwenge, Uganda."
+  >
+
+  <meta name="theme-color" content="#FFD800">
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="FrankMyMP"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="default"
+  >
+
+  <!-- SOCIAL SHARING -->
+
+  <meta
+    property="og:title"
+    content="#FrankMyMP #FrankMyChoice"
+  >
+
+  <meta
+    property="og:description"
+    content="Latest news and public updates from Rwamwanja, Kamwenge, Uganda."
+  >
+
+  <meta property="og:type" content="website">
+
+  <meta
+    property="og:site_name"
+    content="#FrankMyMP #FrankMyChoice"
+  >
+
+  <!-- ICONS -->
+
+  <link
+    rel="icon"
+    href="/assets/icons/favicon.ico"
+    sizes="any"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="32x32"
+    href="/assets/icons/favicon-32.png"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="/assets/icons/favicon-16.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="/assets/icons/apple-touch-icon.png"
+  >
+
+  <!-- PWA MANIFEST -->
+
+  <link
+    rel="manifest"
+    href="/manifest.webmanifest"
+  >
+
+  <!-- STYLESHEET -->
+
+  <link
+    rel="stylesheet"
+    href="/css/style.css"
+  >
+
+  <!-- INSTALL BUTTON STYLING -->
+
+  <style>
+    .install-app-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border: 1px solid #b71924;
+      border-radius: 999px;
+      background: #c51623;
+      color: #ffffff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.2;
+      cursor: pointer;
+      white-space: nowrap;
+      transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .install-app-btn:hover {
+      background: #a4111b;
+      transform: translateY(-1px);
+    }
+
+    .install-app-btn:focus-visible {
+      outline: 3px solid #151515;
+      outline-offset: 3px;
+    }
+
+    .install-app-btn.hidden {
+      display: none !important;
+    }
+
+    .install-notice {
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      z-index: 9999;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 18px;
+      border: 1px solid #e0c450;
+      border-radius: 16px;
+      background: #ffffff;
+      color: #151515;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+
+    .install-notice[hidden] {
+      display: none !important;
+    }
+
+    .install-notice p {
+      margin: 9px 0 14px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .install-notice button {
+      border: 0;
+      border-radius: 8px;
+      background: #FFD800;
+      color: #151515;
+      font: inherit;
+      font-weight: 700;
+      padding: 9px 18px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .install-app-btn {
+        font-size: 12px;
+        padding: 10px 13px;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- ======================================
+       LOCATION BAR
+  ====================================== -->
+
+  <div class="topbar">
+    <div class="wrap location-bar">
+      <span>
+        RWAMWANJA • KAMWENGE • UGANDA
+      </span>
+    </div>
+  </div>
+
+  <!-- ======================================
+       HEADER
+  ====================================== -->
+
+  <header class="header">
+
+    <div class="wrap header-inner">
+
+      <a
+        href="/"
+        class="brandgroup"
+        aria-label="#FrankMyMP #FrankMyChoice Homepage"
+      >
+
+        <!-- NRM EMBLEM -->
+
+        <img
+          class="nrm-mark hidden"
+          id="nrmLogo"
+          src="/assets/nrm-logo.png"
+          alt="NRM emblem"
+        >
+
+        <!-- BRAND TRADEMARK -->
+
+        <div class="brand">
+
+          <span>
+            <b class="red">#Frank</b>MyMP
+          </span>
+
+          <span>
+            #Frank<b class="red">MyChoice</b>
+          </span>
+
+        </div>
+
+      </a>
+
+      <!-- MOBILE MENU BUTTON -->
+
+      <button
+        class="nav-toggle"
+        id="menuBtn"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-controls="nav"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+
+      <!-- MAIN NAVIGATION -->
+
+      <nav
+        class="nav"
+        id="nav"
+        aria-label="Main navigation"
+      >
+
+        <a href="/">
+          Home
+        </a>
+
+        <a href="/#latest">
+          Latest News
+        </a>
+
+        <!-- VISITOR COUNTER -->
+
+        <span
+          class="viewer-chip"
+          title="Approximate recorded site visits"
+          aria-label="Recorded site visits"
+        >
+          <span aria-hidden="true">◉</span>
+          Views:
+          <strong id="visitors">—</strong>
+        </span>
+
+        <!-- INSTALL APP BUTTON -->
+
+        <button
+          id="installAppBtn"
+          class="install-app-btn hidden"
+          type="button"
+          aria-label="Install FrankMyMP application"
+        >
+          <span aria-hidden="true">↓</span>
+          Install App
+        </button>
+
+        <!-- ADMIN -->
+
+        <a
+          class="pill"
+          href="/admin/"
+        >
+          Admin
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+  <!-- ======================================
+       INSTALLATION INFORMATION
+  ====================================== -->
+
+  <div
+    id="installNotice"
+    class="install-notice"
+    role="dialog"
+    aria-label="Install application"
+    aria-modal="false"
+    hidden
+  >
+
+    <strong>
+      Install #FrankMyMP #FrankMyChoice
+    </strong>
+
+    <p id="installNoticeText"></p>
+
+    <button
+      id="closeInstallNotice"
+      type="button"
+    >
+      Close
+    </button>
+
+  </div>
+
+  <!-- ======================================
+       MAIN CONTENT
+  ====================================== -->
+
+  <main>
+
+    <!-- ANIMATED NEWS TICKER -->
+
+    <section
+      class="wrap ticker-wrap"
+      aria-label="Recent headlines"
+    >
+
+      <span class="ticker-label">
+        NEWS
+      </span>
+
+      <div class="ticker-viewport">
+
+        <div
+          id="newsTicker"
+          class="ticker-content"
+          aria-live="off"
+        >
+          New updates will appear here when published.
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- FEATURED STORIES -->
+
+    <section class="wrap section">
+
+      <div class="section-header">
+
+        <h2
+          class="section-title"
+          id="featureHeading"
+        >
+          Featured Stories
+        </h2>
+
+        <span class="muted">
+          Latest reports
+        </span>
+
+      </div>
+
+      <div
+        id="featured"
+        class="feature-grid"
+      >
+        <div class="empty">
+          Loading featured news…
+        </div>
+      </div>
+
+    </section>
+
+    <!-- LATEST NEWS -->
+
+    <section
+      class="wrap section"
+      id="latest"
+    >
+
+      <div class="section-header">
+
+        <h2
+          class="section-title"
+          id="latestHeading"
+        >
+          Latest Updates
+        </h2>
+
+        <!-- CATEGORY FILTER -->
+
+        <select
+          id="categoryFilter"
+          class="field"
+          style="max-width:210px"
+          aria-label="Filter news category"
+        >
+
+          <option value="">
+            All Categories
+          </option>
+
+          <option value="Achievements">
+            Achievements
+          </option>
+
+          <option value="Development">
+            Development
+          </option>
+
+          <option value="Agriculture">
+            Agriculture
+          </option>
+
+          <option value="Facts & Clarifications">
+            Facts &amp; Clarifications
+          </option>
+
+          <option value="Community">
+            Community
+          </option>
+
+          <option value="From Hon. Frank">
+            From Hon. Frank
+          </option>
+
+          <option value="Education">
+            Education
+          </option>
+
+        </select>
+
+      </div>
+
+      <!-- NEWS CARDS -->
+
+      <div
+        id="news"
+        class="news-grid"
+      >
+        <div class="empty">
+          Loading news…
+        </div>
+      </div>
+
+      <!-- LOAD MORE -->
+
+      <button
+        id="loadMore"
+        class="btn secondary hidden"
+        type="button"
+      >
+        Load More
+      </button>
+
+    </section>
+
+  </main>
+
+  <!-- ======================================
+       FOOTER
+  ====================================== -->
+
+  <footer class="footer">
+
+    <div class="wrap footer-grid">
+
+      <div>
+
+        <div class="brand">
+
+          <span>
+            <b class="red">#Frank</b>MyMP
+          </span>
+
+          <span>
+            #Frank<b class="red">MyChoice</b>
+          </span>
+
+        </div>
+
+        <p class="subtle">
+          Rwamwanja • Kamwenge • Uganda
+        </p>
+
+      </div>
+
+      <div class="subtle">
+
+        Public information platform. Statements and
+        reports are attributed to their sources.
+
+        <p>
+          © <span id="year"></span>
+          #FrankMyMP #FrankMyChoice
+        </p>
+
+      </div>
+
+    </div>
+
+  </footer>
+
+  <!-- NEWS APPLICATION -->
+
+  <script
+    type="module"
+    src="/js/home.js"
+  ></script>
+
+  <!-- INSTALLATION APPLICATION -->
+
+  <script
+    defer
+    src="/js/install.js"
+  ></script>
+
+</body>
+</html>

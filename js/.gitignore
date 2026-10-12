@@ -1,0 +1,21 @@
+
+# Private credentials
+.env
+.env.*
+*service-account*.json
+*service_account*.json
+firebase-adminsdk*.json
+*private-key*.json
+credentials.json
+secrets.json
+
+# Dependencies
+node_modules/
+
+# Temporary files
+*.log
+.DS_Store
+Thumbs.db
+
+# Local editor settings
+.vscode/

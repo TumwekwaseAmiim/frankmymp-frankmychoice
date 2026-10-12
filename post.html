@@ -1,0 +1,367 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <!-- ======================================
+       APP NAME AND IDENTITY
+  ====================================== -->
+
+  <title>Article | #FrankMyMP #FrankMyChoice</title>
+
+  <meta
+    name="description"
+    content="Read news and updates from Rwamwanja, Kamwenge, Uganda."
+  >
+
+  <meta
+    name="theme-color"
+    content="#FFD800"
+  >
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="FrankMyMP"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="default"
+  >
+
+  <!-- ======================================
+       BROWSER FAVICONS
+  ====================================== -->
+
+  <link
+    rel="icon"
+    href="/assets/icons/favicon.ico"
+    sizes="any"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="32x32"
+    href="/assets/icons/favicon-32.png"
+  >
+
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="/assets/icons/favicon-16.png"
+  >
+
+  <!-- ======================================
+       APPLE / IPHONE APP ICON
+  ====================================== -->
+
+  <link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="/assets/icons/apple-touch-icon.png"
+  >
+
+  <!-- ======================================
+       PWA MANIFEST
+  ====================================== -->
+
+  <link
+    rel="manifest"
+    href="/manifest.webmanifest"
+  >
+
+  <!-- ======================================
+       WEBSITE STYLES
+  ====================================== -->
+
+  <link
+    rel="stylesheet"
+    href="/css/style.css"
+  >
+
+</head>
+
+<body>
+
+  <!-- ======================================
+       LOCATION BAR
+  ====================================== -->
+
+  <div class="topbar">
+    <div class="wrap location-bar">
+      RWAMWANJA • KAMWENGE • UGANDA
+    </div>
+  </div>
+
+  <!-- ======================================
+       HEADER
+  ====================================== -->
+
+  <header class="header">
+
+    <div class="wrap header-inner">
+
+      <!-- Brand / Trademark -->
+
+      <a href="/" class="brand">
+
+        <span>
+          <b class="red">#Frank</b>MyMP
+        </span>
+
+        <span>
+          #Frank<b class="red">MyChoice</b>
+        </span>
+
+      </a>
+
+      <!-- Navigation -->
+
+      <div class="row">
+
+        <a href="/" class="pill">
+          ← All News
+        </a>
+
+        <a href="/admin/" class="pill">
+          Admin
+        </a>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <!-- ======================================
+       MAIN ARTICLE
+  ====================================== -->
+
+  <main class="post-main">
+
+    <div id="article">
+      <div class="empty">
+        Loading article…
+      </div>
+    </div>
+
+    <!-- ====================================
+         ARTICLE SOCIAL SHARING
+    ===================================== -->
+
+    <section
+      class="article-sharing hidden"
+      aria-label="Share this article"
+    >
+
+      <h2>Share This Article</h2>
+
+      <p class="muted">
+        Forward this news story to friends and family.
+      </p>
+
+      <div class="share-buttons">
+
+        <!-- WhatsApp -->
+
+        <a
+          id="shareWhatsApp"
+          class="btn share-whatsapp"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp
+        </a>
+
+        <!-- Facebook -->
+
+        <a
+          id="shareFacebook"
+          class="btn share-facebook"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Facebook
+        </a>
+
+        <!-- X -->
+
+        <a
+          id="shareX"
+          class="btn share-x"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          X
+        </a>
+
+        <!-- Copy link -->
+
+        <button
+          id="copyArticleLink"
+          class="btn secondary"
+          type="button"
+        >
+          Copy Link
+        </button>
+
+      </div>
+
+      <p
+        id="shareStatus"
+        class="muted"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+    </section>
+
+    <!-- ====================================
+         READER COMMENTS
+    ===================================== -->
+
+    <section class="comments">
+
+      <h2>Reader Comments</h2>
+
+      <p class="muted">
+        Comments are reviewed before being displayed.
+        Please keep your contribution respectful and factual.
+      </p>
+
+      <!-- Approved comments -->
+
+      <div id="comments"></div>
+
+      <h3>Leave a comment</h3>
+
+      <!-- Comment submission form -->
+
+      <form
+        class="form"
+        id="commentForm"
+      >
+
+        <!-- Reader name -->
+
+        <label for="commentName">
+          Your name
+        </label>
+
+        <input
+          class="field"
+          id="commentName"
+          name="name"
+          type="text"
+          maxlength="80"
+          autocomplete="name"
+          required
+        >
+
+        <!-- Reader comment -->
+
+        <label for="commentText">
+          Comment
+        </label>
+
+        <textarea
+          class="field"
+          id="commentText"
+          name="comment"
+          maxlength="2000"
+          required
+        ></textarea>
+
+        <!-- Spam protection -->
+
+        <div
+          class="hidden"
+          aria-hidden="true"
+        >
+
+          <label for="websiteField">
+            Website
+          </label>
+
+          <input
+            id="websiteField"
+            name="website"
+            type="text"
+            tabindex="-1"
+            autocomplete="off"
+          >
+
+        </div>
+
+        <!-- Submit -->
+
+        <button
+          class="btn"
+          type="submit"
+        >
+          Submit for approval
+        </button>
+
+        <!-- Submission status -->
+
+        <p
+          id="commentStatus"
+          class="muted"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+      </form>
+
+    </section>
+
+  </main>
+
+  <!-- ======================================
+       FOOTER
+  ====================================== -->
+
+  <footer class="footer">
+
+    <div class="wrap">
+
+      © <span id="year"></span>
+
+      #FrankMyMP #FrankMyChoice
+
+      • <a href="/">
+        Back to homepage
+      </a>
+
+    </div>
+
+  </footer>
+
+  <!-- ======================================
+       ARTICLE APPLICATION
+  ====================================== -->
+
+  <script
+    type="module"
+    src="/js/post.js"
+  ></script>
+
+</body>
+</html>

@@ -1,13 +1,15 @@
 
-/*
-  #FrankMyMP #FrankMyChoice
-  Administration Dashboard
+/* =====================================================
+   #FrankMyMP #FrankMyChoice
+   ADMINISTRATION DASHBOARD
 
-  Firebase Authentication
-  Firestore News Management
-  Cloudinary Photograph Uploads
-  Cloudflare Comment Moderation
-*/
+   - Firebase administrator login
+   - Firestore news management
+   - Cloudinary photo uploads
+   - News publishing and editing
+   - Automatic preview refresh requests
+   - Cloudflare comment moderation
+===================================================== */
 
 // ==========================================
 // FIREBASE AUTHENTICATION
@@ -69,8 +71,16 @@ const UPLOAD_API =
 const MODERATION_API =
   API_BASE + '/comments/moderate';
 
+// IMPORTANT:
+// The backend must implement this route.
+// Do not put a Cloudflare Deploy Hook URL
+// anywhere in this public file.
+
+const PREVIEW_REFRESH_API =
+  API_BASE + '/refresh-previews';
+
 // ==========================================
-// APPLICATION STATE
+// STATE
 // ==========================================
 
 let user = null;
@@ -105,7 +115,6 @@ function msg(text) {
 $('#login').addEventListener(
   'submit',
   async event => {
-
     event.preventDefault();
 
     const loginButton = $('#login')
@@ -116,7 +125,6 @@ $('#login').addEventListener(
     }
 
     try {
-
       await signInWithEmailAndPassword(
         auth,
         $('#email').value.trim(),
@@ -127,12 +135,10 @@ $('#login').addEventListener(
         'Signed in successfully.';
 
     } catch (error) {
-
       $('#loginMsg').textContent =
         error.message;
 
     } finally {
-
       if (loginButton) {
         loginButton.disabled = false;
       }
@@ -147,7 +153,6 @@ $('#login').addEventListener(
 $('#logout').addEventListener(
   'click',
   async () => {
-
     try {
       await signOut(auth);
     } catch (error) {
@@ -163,27 +168,17 @@ $('#logout').addEventListener(
 onAuthStateChanged(
   auth,
   async currentUser => {
-
     user = null;
 
-    $('#dashboard').classList.add(
-      'hidden'
-    );
-
-    $('#logout').classList.add(
-      'hidden'
-    );
-
-    $('#loginPanel').classList.remove(
-      'hidden'
-    );
+    $('#dashboard').classList.add('hidden');
+    $('#logout').classList.add('hidden');
+    $('#loginPanel').classList.remove('hidden');
 
     if (!currentUser) {
       return;
     }
 
     try {
-
       const approval = await getDoc(
         doc(
           db,
@@ -197,7 +192,6 @@ onAuthStateChanged(
         approval.data().active !== true ||
         approval.data().role !== 'admin'
       ) {
-
         $('#loginMsg').textContent =
           'Your account is not an approved administrator.';
 
@@ -206,22 +200,13 @@ onAuthStateChanged(
 
       user = currentUser;
 
-      $('#dashboard').classList.remove(
-        'hidden'
-      );
-
-      $('#logout').classList.remove(
-        'hidden'
-      );
-
-      $('#loginPanel').classList.add(
-        'hidden'
-      );
+      $('#dashboard').classList.remove('hidden');
+      $('#logout').classList.remove('hidden');
+      $('#loginPanel').classList.add('hidden');
 
       await refresh();
 
     } catch (error) {
-
       console.error(
         'Administrator authorization error:',
         error
@@ -238,18 +223,14 @@ onAuthStateChanged(
 // ==========================================
 
 function reset() {
-
   editId = null;
   existingImages = [];
 
   $('#postForm').reset();
 
   $('#category').value = 'None';
-
   $('#publish').checked = true;
-
   $('#featured').checked = false;
-
   $('#files').value = '';
 
   $('#photoPreviews').replaceChildren();
@@ -272,42 +253,31 @@ $('#cancelEdit').addEventListener(
 $('#files').addEventListener(
   'change',
   () => {
-
-    const files = [
-      ...$('#files').files
-    ];
-
-    const preview =
-      $('#photoPreviews');
+    const files = [...$('#files').files];
+    const preview = $('#photoPreviews');
 
     preview.replaceChildren();
 
     if (files.length > MAX_PHOTOS) {
-
       alert(
         'Choose a maximum of three photographs.'
       );
 
       $('#files').value = '';
-
       return;
     }
 
     for (const file of files) {
-
       if (
         !ALLOWED_TYPES.includes(file.type) ||
         file.size > MAX_FILE_SIZE
       ) {
-
         alert(
           'Photographs must be JPG, PNG or WebP and no larger than 5 MB each.'
         );
 
         $('#files').value = '';
-
         preview.replaceChildren();
-
         return;
       }
 
@@ -317,9 +287,7 @@ $('#files').addEventListener(
         URL.createObjectURL(file);
 
       image.src = objectUrl;
-
-      image.alt =
-        'Selected photograph preview';
+      image.alt = 'Selected photograph preview';
 
       image.onload = () => {
         URL.revokeObjectURL(objectUrl);
@@ -335,8 +303,7 @@ $('#files').addEventListener(
 // ==========================================
 
 function slugify(text) {
-
-  return text
+  return String(text)
     .normalize('NFKD')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -345,14 +312,21 @@ function slugify(text) {
 }
 
 // ==========================================
-// WORKING ARTICLE URL
+// ARTICLE URLS
 // ==========================================
 
 function articleUrl(postId) {
-
   return (
     '/post.html?slug=' +
     encodeURIComponent(postId)
+  );
+}
+
+function publicArticleUrl(postId) {
+  return (
+    'https://frankmymp-frankmychoice.pages.dev/post/' +
+    encodeURIComponent(postId) +
+    '/'
   );
 }
 
@@ -361,7 +335,6 @@ function articleUrl(postId) {
 // ==========================================
 
 async function getAdminToken() {
-
   if (!user) {
     throw new Error(
       'Administrator login required.'
@@ -372,11 +345,71 @@ async function getAdminToken() {
 }
 
 // ==========================================
+// AUTOMATIC NEWS PREVIEW REFRESH
+//
+// The Cloudflare Worker must:
+// 1. Verify the Firebase ID token.
+// 2. Verify active admin role.
+// 3. Verify article publication state.
+// 4. Trigger the private Pages Deploy Hook.
+// 5. Return a truthful JSON result.
+//
+// Never expose the deployment hook here.
+// ==========================================
+
+async function requestPreviewRefresh(
+  postId,
+  action = 'publish'
+) {
+  const firebaseToken =
+    await getAdminToken();
+
+  const response = await fetch(
+    PREVIEW_REFRESH_API,
+    {
+      method: 'POST',
+
+      headers: {
+        Authorization:
+          `Bearer ${firebaseToken}`,
+
+        'Content-Type':
+          'application/json'
+      },
+
+      body: JSON.stringify({
+        postId,
+        action
+      })
+    }
+  );
+
+  const contentType =
+    response.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      'Preview refresh service is not configured correctly.'
+    );
+  }
+
+  const result = await response.json();
+
+  if (!response.ok || result.success !== true) {
+    throw new Error(
+      result.error ||
+      'Cloudflare preview refresh request failed.'
+    );
+  }
+
+  return result;
+}
+
+// ==========================================
 // SECURE CLOUDINARY SIGNATURE
 // ==========================================
 
 async function getUploadSignature() {
-
   const firebaseToken =
     await getAdminToken();
 
@@ -408,7 +441,6 @@ async function getUploadSignature() {
   }
 
   if (!response.ok) {
-
     throw new Error(
       result.error ||
       'Photograph upload authorization failed.'
@@ -420,7 +452,6 @@ async function getUploadSignature() {
     !result.timestamp ||
     !result.api_key
   ) {
-
     throw new Error(
       'Upload authorization is missing required information.'
     );
@@ -434,12 +465,10 @@ async function getUploadSignature() {
 // ==========================================
 
 async function uploadFile(file) {
-
   if (
     !ALLOWED_TYPES.includes(file.type) ||
     file.size > MAX_FILE_SIZE
   ) {
-
     throw new Error(
       'Photographs must be JPG, PNG or WebP and no larger than 5 MB.'
     );
@@ -447,40 +476,28 @@ async function uploadFile(file) {
 
   if (
     !CLOUDINARY_CLOUD_NAME ||
-    CLOUDINARY_CLOUD_NAME.startsWith(
-      'REPLACE_'
-    )
+    CLOUDINARY_CLOUD_NAME.startsWith('REPLACE_')
   ) {
-
     throw new Error(
       'Cloudinary Cloud Name is not configured.'
     );
   }
-
-  // Get signed upload authorization.
 
   const signed =
     await getUploadSignature();
 
   if (
     signed.cloud_name &&
-    signed.cloud_name !==
-      CLOUDINARY_CLOUD_NAME
+    signed.cloud_name !== CLOUDINARY_CLOUD_NAME
   ) {
-
     throw new Error(
       'Cloudinary Cloud Name does not match the API.'
     );
   }
 
-  // Prepare the upload.
-
   const formData = new FormData();
 
-  formData.append(
-    'file',
-    file
-  );
+  formData.append('file', file);
 
   for (const key of [
     'api_key',
@@ -489,9 +506,7 @@ async function uploadFile(file) {
     'folder',
     'public_id'
   ]) {
-
     if (signed[key] !== undefined) {
-
       formData.append(
         key,
         String(signed[key])
@@ -499,14 +514,10 @@ async function uploadFile(file) {
     }
   }
 
-  // Upload directly to Cloudinary.
-
   const response = await fetch(
     'https://api.cloudinary.com/v1_1/' +
-      encodeURIComponent(
-        CLOUDINARY_CLOUD_NAME
-      ) +
-      '/image/upload',
+    encodeURIComponent(CLOUDINARY_CLOUD_NAME) +
+    '/image/upload',
     {
       method: 'POST',
       body: formData
@@ -524,7 +535,6 @@ async function uploadFile(file) {
   }
 
   if (!response.ok) {
-
     throw new Error(
       result.error?.message ||
       'Cloudinary photograph upload failed.'
@@ -535,7 +545,6 @@ async function uploadFile(file) {
     !result.secure_url ||
     !result.public_id
   ) {
-
     throw new Error(
       'Cloudinary did not return the uploaded photograph URL.'
     );
@@ -548,17 +557,15 @@ async function uploadFile(file) {
 }
 
 // ==========================================
-// CREATE OR UPDATE A NEWS POST
+// CREATE OR UPDATE NEWS
 // ==========================================
 
 $('#postForm').addEventListener(
   'submit',
   async event => {
-
     event.preventDefault();
 
     if (!user) {
-
       msg(
         'Please sign in as an administrator.'
       );
@@ -571,16 +578,11 @@ $('#postForm').addEventListener(
     button.disabled = true;
 
     try {
-
       const selectedFiles = [
         ...$('#files').files
       ];
 
-      if (
-        selectedFiles.length >
-        MAX_PHOTOS
-      ) {
-
+      if (selectedFiles.length > MAX_PHOTOS) {
         throw new Error(
           'Maximum of three photographs allowed.'
         );
@@ -607,7 +609,6 @@ $('#postForm').addEventListener(
           : 'draft';
 
       if (!title || !excerpt) {
-
         throw new Error(
           'Headline and short caption are required.'
         );
@@ -617,21 +618,17 @@ $('#postForm').addEventListener(
         type === 'article' &&
         !body
       ) {
-
         throw new Error(
           'A full article must have article text.'
         );
       }
 
-      let images = [
-        ...existingImages
-      ];
+      let images = [...existingImages];
 
-      // New selections replace the full
-      // collection of existing photographs.
+      // Newly selected photographs replace
+      // the existing collection.
 
       if (selectedFiles.length) {
-
         images = [];
 
         for (
@@ -639,15 +636,12 @@ $('#postForm').addEventListener(
           i < selectedFiles.length;
           i++
         ) {
-
           msg(
             `Uploading photograph ${i + 1} of ${selectedFiles.length}…`
           );
 
           const uploaded =
-            await uploadFile(
-              selectedFiles[i]
-            );
+            await uploadFile(selectedFiles[i]);
 
           images.push(uploaded);
         }
@@ -664,7 +658,6 @@ $('#postForm').addEventListener(
           Date.now().toString(36);
 
       const payload = {
-
         title,
         excerpt,
         body,
@@ -688,7 +681,6 @@ $('#postForm').addEventListener(
       };
 
       if (!editId) {
-
         payload.createdAt =
           serverTimestamp();
 
@@ -700,17 +692,11 @@ $('#postForm').addEventListener(
         payload.views = 0;
 
       } else {
-
         const old = await getDoc(
-          doc(
-            db,
-            'posts',
-            id
-          )
+          doc(db, 'posts', id)
         );
 
         if (!old.exists()) {
-
           throw new Error(
             'The post being edited no longer exists.'
           );
@@ -720,18 +706,18 @@ $('#postForm').addEventListener(
           status === 'published' &&
           !old.data().publishedAt
         ) {
-
           payload.publishedAt =
             serverTimestamp();
         }
 
-        if (
-          status === 'draft'
-        ) {
-
+        if (status === 'draft') {
           payload.publishedAt = null;
         }
       }
+
+      // ==================================
+      // SAVE TO FIREBASE
+      // ==================================
 
       await setDoc(
         doc(db, 'posts', id),
@@ -743,14 +729,49 @@ $('#postForm').addEventListener(
 
       await refresh();
 
-      msg(
-        status === 'published'
-          ? 'Success! Your news article has been published.'
-          : 'Draft saved successfully.'
-      );
+      // ==================================
+      // REQUEST AUTOMATIC PREVIEW UPDATE
+      //
+      // Firebase saving has succeeded
+      // before this point. A deployment
+      // error must never be reported as
+      // a failure to publish the article.
+      // ==================================
+
+      if (status === 'published') {
+        msg(
+          'News published successfully. Requesting an updated landing page…'
+        );
+
+        try {
+          await requestPreviewRefresh(
+            id,
+            'publish'
+          );
+
+          msg(
+            'News published! Cloudflare rebuild requested. Wait for the deployment to finish before sharing the new article. Link: ' +
+            publicArticleUrl(id)
+          );
+
+        } catch (refreshError) {
+          console.warn(
+            'Preview rebuild not requested:',
+            refreshError
+          );
+
+          msg(
+            'News published successfully, but the automatic preview refresh is not yet available. The next scheduled refresh can update its landing page.'
+          );
+        }
+
+      } else {
+        msg(
+          'Draft saved successfully.'
+        );
+      }
 
     } catch (error) {
-
       console.error(
         'Post publishing error:',
         error
@@ -761,7 +782,6 @@ $('#postForm').addEventListener(
       );
 
     } finally {
-
       button.disabled = false;
     }
   }
@@ -772,7 +792,6 @@ $('#postForm').addEventListener(
 // ==========================================
 
 async function refresh() {
-
   await Promise.allSettled([
     refreshPosts(),
     refreshComments()
@@ -784,13 +803,11 @@ async function refresh() {
 // ==========================================
 
 async function refreshPosts() {
-
   const root = $('#postList');
 
   root.replaceChildren();
 
   try {
-
     const snapshot = await getDocs(
       query(
         collection(db, 'posts'),
@@ -800,7 +817,6 @@ async function refreshPosts() {
     );
 
     if (snapshot.empty) {
-
       root.append(
         el(
           'p',
@@ -812,212 +828,218 @@ async function refreshPosts() {
       return;
     }
 
-    snapshot.docs.forEach(
-      document => {
+    snapshot.docs.forEach(document => {
+      const data = document.data();
 
-        const data =
-          document.data();
+      const row = el(
+        'div',
+        'post-row'
+      );
 
-        const row = el(
-          'div',
-          'post-row'
+      const summary = el('div');
+
+      const categoryText =
+        data.category &&
+        data.category !== 'None'
+          ? ' • ' + data.category
+          : '';
+
+      summary.append(
+        el(
+          'strong',
+          '',
+          data.title || 'Untitled'
+        ),
+
+        el(
+          'p',
+          'muted',
+          (data.status || 'draft') +
+            categoryText +
+            ' • ' +
+            fmtDate(data.createdAt)
+        )
+      );
+
+      const actions = el(
+        'div',
+        'row'
+      );
+
+      // ==================================
+      // EDIT
+      // ==================================
+
+      const editPost = () => {
+        editId = document.id;
+
+        existingImages =
+          Array.isArray(data.images)
+            ? [...data.images]
+            : [];
+
+        $('#title').value =
+          data.title || '';
+
+        $('#excerpt').value =
+          data.excerpt || '';
+
+        $('#body').value =
+          data.body || '';
+
+        const category =
+          data.category || 'None';
+
+        const categoryExists = [
+          ...$('#category').options
+        ].some(option =>
+          option.value === category
         );
 
-        const summary =
-          el('div');
+        $('#category').value =
+          categoryExists
+            ? category
+            : 'None';
 
-        const categoryText =
-          data.category &&
-          data.category !== 'None'
-            ? ' • ' + data.category
-            : '';
+        $('#type').value =
+          data.type || 'photo';
 
-        summary.append(
-          el(
-            'strong',
-            '',
-            data.title || 'Untitled'
-          ),
-          el(
-            'p',
-            'muted',
-            (data.status || 'draft') +
-              categoryText +
-              ' • ' +
-              fmtDate(data.createdAt)
-          )
+        $('#sources').value =
+          data.sources || '';
+
+        $('#featured').checked =
+          !!data.featured;
+
+        $('#publish').checked =
+          data.status === 'published';
+
+        $('#files').value = '';
+
+        const previews = existingImages
+          .map(item => {
+            const url =
+              typeof item === 'string'
+                ? item
+                : (
+                    item?.url ||
+                    item?.secure_url ||
+                    ''
+                  );
+
+            if (!url) return null;
+
+            const preview = el('img');
+
+            preview.src = url;
+            preview.alt =
+              'Existing photograph';
+
+            return preview;
+          })
+          .filter(Boolean);
+
+        $('#photoPreviews').replaceChildren(
+          ...previews
         );
 
-        const actions = el(
-          'div',
-          'row'
+        $('#editorHeading').textContent =
+          'Edit Post';
+
+        msg('');
+
+        location.hash = 'editor';
+      };
+
+      // ==================================
+      // OPEN ARTICLE
+      // ==================================
+
+      const openPost = () => {
+        window.open(
+          articleUrl(document.id),
+          '_blank',
+          'noopener'
+        );
+      };
+
+      // ==================================
+      // DELETE ARTICLE
+      // ==================================
+
+      const deletePost = async () => {
+        const confirmed = confirm(
+          'Delete this post? This cannot be undone.'
         );
 
-        // ==================================
-        // EDIT POST
-        // ==================================
-
-        const editPost = () => {
-
-          editId = document.id;
-
-          existingImages =
-            Array.isArray(data.images)
-              ? [...data.images]
-              : [];
-
-          $('#title').value =
-            data.title || '';
-
-          $('#excerpt').value =
-            data.excerpt || '';
-
-          $('#body').value =
-            data.body || '';
-
-          const category =
-            data.category || 'None';
-
-          const categoryExists = [
-            ...$('#category').options
-          ].some(
-            option =>
-              option.value === category
-          );
-
-          $('#category').value =
-            categoryExists
-              ? category
-              : 'None';
-
-          $('#type').value =
-            data.type || 'photo';
-
-          $('#sources').value =
-            data.sources || '';
-
-          $('#featured').checked =
-            !!data.featured;
-
-          $('#publish').checked =
-            data.status === 'published';
-
-          $('#files').value = '';
-
-          $('#photoPreviews').replaceChildren(
-            ...existingImages.map(image => {
-
-              const preview =
-                el('img');
-
-              preview.src =
-                image.url;
-
-              preview.alt =
-                'Existing photograph';
-
-              return preview;
-            })
-          );
-
-          $('#editorHeading').textContent =
-            'Edit Post';
-
-          msg('');
-
-          location.hash = 'editor';
-        };
-
-        // ==================================
-        // OPEN POST
-        // ==================================
-
-        const openPost = () => {
-
-          window.open(
-            articleUrl(document.id),
-            '_blank',
-            'noopener'
-          );
-        };
-
-        // ==================================
-        // DELETE POST
-        // ==================================
-
-        const deletePost = async () => {
-
-          const confirmed = confirm(
-            'Delete this post? This cannot be undone.'
-          );
-
-          if (!confirmed) {
-            return;
-          }
-
-          try {
-
-            await deleteDoc(
-              doc(
-                db,
-                'posts',
-                document.id
-              )
-            );
-
-            await refresh();
-
-          } catch (error) {
-
-            alert(
-              'Unable to delete post: ' +
-              error.message
-            );
-          }
-        };
-
-        // ==================================
-        // CREATE BUTTONS
-        // ==================================
-
-        const availableActions = [
-          ['Edit', editPost],
-          ['Open', openPost],
-          ['Delete', deletePost]
-        ];
-
-        for (
-          const [label, callback]
-          of availableActions
-        ) {
-
-          const button = el(
-            'button',
-            'btn ghost',
-            label
-          );
-
-          button.type = 'button';
-
-          button.addEventListener(
-            'click',
-            callback
-          );
-
-          actions.append(button);
+        if (!confirmed) {
+          return;
         }
 
-        row.append(
-          summary,
-          actions
+        try {
+          await deleteDoc(
+            doc(
+              db,
+              'posts',
+              document.id
+            )
+          );
+
+          await refresh();
+
+          // The scheduled refresh will
+          // eventually remove generated
+          // preview pages for deleted posts.
+          //
+          // A backend delete-trigger can
+          // be added later if required.
+
+        } catch (error) {
+          alert(
+            'Unable to delete post: ' +
+            error.message
+          );
+        }
+      };
+
+      // ==================================
+      // BUTTONS
+      // ==================================
+
+      const availableActions = [
+        ['Edit', editPost],
+        ['Open', openPost],
+        ['Delete', deletePost]
+      ];
+
+      for (
+        const [label, callback]
+        of availableActions
+      ) {
+        const button = el(
+          'button',
+          'btn ghost',
+          label
         );
 
-        root.append(row);
+        button.type = 'button';
+
+        button.addEventListener(
+          'click',
+          callback
+        );
+
+        actions.append(button);
       }
-    );
+
+      row.append(
+        summary,
+        actions
+      );
+
+      root.append(row);
+    });
 
   } catch (error) {
-
     console.error(
       'Post management error:',
       error
@@ -1037,7 +1059,6 @@ async function moderateComment(
   commentId,
   action
 ) {
-
   const firebaseToken =
     await getAdminToken();
 
@@ -1064,11 +1085,8 @@ async function moderateComment(
   let result;
 
   try {
-
     result = await response.json();
-
   } catch {
-
     throw new Error(
       'Invalid response from comment moderation API.'
     );
@@ -1078,7 +1096,6 @@ async function moderateComment(
     !response.ok ||
     result.success !== true
   ) {
-
     throw new Error(
       result.error ||
       'Comment moderation failed.'
@@ -1093,29 +1110,20 @@ async function moderateComment(
 // ==========================================
 
 async function refreshComments() {
-
   const root = $('#pendingList');
 
   root.replaceChildren();
 
   try {
-
     const snapshot = await getDocs(
       query(
         collection(db, 'comments'),
-
-        where(
-          'status',
-          '==',
-          'pending'
-        ),
-
+        where('status', '==', 'pending'),
         limit(100)
       )
     );
 
     if (snapshot.empty) {
-
       root.append(
         el(
           'p',
@@ -1127,126 +1135,114 @@ async function refreshComments() {
       return;
     }
 
-    snapshot.docs.forEach(
-      document => {
+    snapshot.docs.forEach(document => {
+      const comment = document.data();
 
-        const comment =
-          document.data();
+      const row = el(
+        'div',
+        'post-row'
+      );
 
-        const row = el(
-          'div',
-          'post-row'
+      const content = el('div');
+
+      content.append(
+        el(
+          'strong',
+          '',
+          (comment.name || 'Visitor') +
+            ' on ' +
+            (comment.postId || 'Unknown article')
+        ),
+
+        el(
+          'p',
+          '',
+          comment.text || ''
+        ),
+
+        el(
+          'p',
+          'muted',
+          fmtDate(comment.createdAt)
+        )
+      );
+
+      const buttons = el(
+        'div',
+        'row'
+      );
+
+      // APPROVE OR REJECT
+
+      for (
+        const [label, action]
+        of [
+          ['Approve', 'approve'],
+          ['Reject', 'reject']
+        ]
+      ) {
+        const button = el(
+          'button',
+          'btn ghost',
+          label
         );
 
-        const content =
-          el('div');
+        button.type = 'button';
 
-        content.append(
-          el(
-            'strong',
-            '',
-            (comment.name || 'Visitor') +
-              ' on ' +
-              (comment.postId || 'Unknown article')
-          ),
+        button.addEventListener(
+          'click',
+          async () => {
+            const otherButtons =
+              buttons.querySelectorAll(
+                'button'
+              );
 
-          el(
-            'p',
-            '',
-            comment.text || ''
-          ),
+            otherButtons.forEach(
+              element => {
+                element.disabled = true;
+              }
+            );
 
-          el(
-            'p',
-            'muted',
-            fmtDate(comment.createdAt)
-          )
-        );
+            try {
+              await moderateComment(
+                document.id,
+                action
+              );
 
-        const buttons = el(
-          'div',
-          'row'
-        );
+              await refreshComments();
 
-        // ==================================
-        // APPROVE / REJECT
-        // ==================================
+            } catch (error) {
+              console.error(
+                'Comment moderation error:',
+                error
+              );
 
-        for (
-          const [label, action]
-          of [
-            ['Approve', 'approve'],
-            ['Reject', 'reject']
-          ]
-        ) {
-
-          const button = el(
-            'button',
-            'btn ghost',
-            label
-          );
-
-          button.type = 'button';
-
-          button.addEventListener(
-            'click',
-            async () => {
-
-              const otherButtons =
-                buttons.querySelectorAll(
-                  'button'
-                );
+              alert(
+                'Unable to moderate comment: ' +
+                error.message
+              );
 
               otherButtons.forEach(
                 element => {
-                  element.disabled = true;
+                  element.disabled = false;
                 }
               );
-
-              try {
-
-                await moderateComment(
-                  document.id,
-                  action
-                );
-
-                await refreshComments();
-
-              } catch (error) {
-
-                console.error(
-                  'Comment moderation error:',
-                  error
-                );
-
-                alert(
-                  'Unable to moderate comment: ' +
-                  error.message
-                );
-
-                otherButtons.forEach(
-                  element => {
-                    element.disabled = false;
-                  }
-                );
-              }
             }
-          );
-
-          buttons.append(button);
-        }
-
-        row.append(
-          content,
-          buttons
+          }
         );
 
-        root.append(row);
+        buttons.append(button);
       }
-    );
+
+      row.append(
+        content,
+        buttons
+      );
+
+      root.append(row);
+    });
 
   } catch (error) {
-
     console.error(
       'Comment loading error:',
       error

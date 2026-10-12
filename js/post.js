@@ -1,15 +1,17 @@
 
 /* =====================================================
    #FrankMyMP #FrankMyChoice
-   Public News Article Page
+   PUBLIC NEWS ARTICLE PAGE
 
+   Features:
    - Firebase Firestore articles
    - Cloudinary photographs
    - Cloudflare comments
-   - Article visitor counter
-   - WhatsApp / Facebook / X sharing
-   - 10-day news expiration
-   - Local and Cloudflare article links
+   - Article visitor counts
+   - WhatsApp, Facebook and X sharing
+   - Copy article URL
+   - 10-day publication window
+   - Local and public article links
 ===================================================== */
 
 // ==========================================
@@ -91,19 +93,22 @@ let post = null;
 // ==========================================
 
 function getArticleId() {
-
   const parts = window.location.pathname
     .split('/')
     .filter(Boolean);
 
-  // Public Cloudflare URL:
+  // Public article:
   // /post/ARTICLE_ID/
 
   if (parts[0] === 'post' && parts[1]) {
-    return decodeURIComponent(parts[1]);
+    try {
+      return decodeURIComponent(parts[1]);
+    } catch {
+      return '';
+    }
   }
 
-  // Local VS Code Live Server:
+  // Local development:
   // /post.html?slug=ARTICLE_ID
 
   const params = new URLSearchParams(
@@ -115,7 +120,6 @@ function getArticleId() {
     params.get('id') ||
     ''
   );
-
 }
 
 const postId = getArticleId();
@@ -125,18 +129,19 @@ const postId = getArticleId();
 // ==========================================
 
 function getPublicArticleUrl() {
+  const base = String(SITE_URL || '')
+    .replace(/\/+$/, '');
 
   if (!postId) {
-    return SITE_URL + '/';
+    return base + '/';
   }
 
   return (
-    SITE_URL.replace(/\/+$/, '') +
+    base +
     '/post/' +
     encodeURIComponent(postId) +
     '/'
   );
-
 }
 
 // ==========================================
@@ -144,7 +149,6 @@ function getPublicArticleUrl() {
 // ==========================================
 
 function isRecent(value) {
-
   if (!value) {
     return false;
   }
@@ -168,7 +172,6 @@ function isRecent(value) {
     milliseconds <= Date.now() &&
     Date.now() - milliseconds < TEN_DAYS_MS
   );
-
 }
 
 // ==========================================
@@ -176,22 +179,20 @@ function isRecent(value) {
 // ==========================================
 
 function setupSharing(newsPost) {
-
   const title =
     newsPost.title || SITE_TITLE;
 
   const description =
     newsPost.excerpt || '';
 
-  // Always share the public Cloudflare URL.
-
   const url = getPublicArticleUrl();
 
   document.title =
     `${title} | ${SITE_TITLE}`;
 
-  // Update the browser's description.
-  // WhatsApp uses server-generated OG tags.
+  // Browser description only.
+  // WhatsApp reads OG metadata from the
+  // server-generated article HTML.
 
   const descriptionMeta =
     document.querySelector(
@@ -208,25 +209,25 @@ function setupSharing(newsPost) {
 
   // ======================================
   // WHATSAPP
+  //
+  // Share URL only. Do not repeat headline
+  // as separate message text.
+  //
+  // WhatsApp will generate its preview
+  // using server-side Open Graph metadata.
   // ======================================
 
   const whatsapp = $('#shareWhatsApp');
 
   if (whatsapp) {
-
-    // Keep the shared message short.
-    // WhatsApp should create the image
-    // preview from the public article URL.
-
-    const shareText = [
-      title,
-      url
-    ].filter(Boolean).join('\n\n');
-
     whatsapp.href =
       'https://wa.me/?text=' +
-      encodeURIComponent(shareText);
+      encodeURIComponent(url);
 
+    whatsapp.target = '_blank';
+
+    whatsapp.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
@@ -236,11 +237,14 @@ function setupSharing(newsPost) {
   const facebook = $('#shareFacebook');
 
   if (facebook) {
-
     facebook.href =
       'https://www.facebook.com/sharer/sharer.php?u=' +
       encodeURIComponent(url);
 
+    facebook.target = '_blank';
+
+    facebook.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
@@ -250,13 +254,16 @@ function setupSharing(newsPost) {
   const xButton = $('#shareX');
 
   if (xButton) {
-
     xButton.href =
       'https://twitter.com/intent/tweet?text=' +
       encodeURIComponent(title) +
       '&url=' +
       encodeURIComponent(url);
 
+    xButton.target = '_blank';
+
+    xButton.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
@@ -266,11 +273,8 @@ function setupSharing(newsPost) {
   const copyButton = $('#copyArticleLink');
 
   if (copyButton) {
-
     copyButton.onclick = async () => {
-
       try {
-
         await navigator.clipboard.writeText(url);
 
         const status = $('#shareStatus');
@@ -281,22 +285,17 @@ function setupSharing(newsPost) {
         }
 
       } catch (error) {
-
         window.prompt(
           'Copy article link:',
           url
         );
-
       }
-
     };
-
   }
 
   sharingSection?.classList.remove(
     'hidden'
   );
-
 }
 
 // ==========================================
@@ -304,22 +303,26 @@ function setupSharing(newsPost) {
 // ==========================================
 
 function renderPhotographs(newsPost) {
-
   const pictures =
     Array.isArray(newsPost.images)
       ? newsPost.images
           .map(item => {
-
             if (typeof item === 'string') {
               return { url: item };
             }
 
-            return item;
-
+            return {
+              ...item,
+              url:
+                item?.url ||
+                item?.secure_url ||
+                item?.src ||
+                ''
+            };
           })
           .filter(item =>
-            typeof item?.url === 'string' &&
-            item.url.length > 0
+            typeof item.url === 'string' &&
+            item.url.startsWith('https://')
           )
           .slice(0, 3)
       : [];
@@ -344,6 +347,8 @@ function renderPhotographs(newsPost) {
 
   mainPhoto.loading = 'eager';
 
+  mainPhoto.decoding = 'async';
+
   mainPhoto.style.marginTop = '25px';
 
   article.append(mainPhoto);
@@ -351,7 +356,6 @@ function renderPhotographs(newsPost) {
   // ADDITIONAL PHOTOGRAPHS
 
   if (pictures.length > 1) {
-
     const photoGrid = el(
       'div',
       'photo-grid'
@@ -359,7 +363,6 @@ function renderPhotographs(newsPost) {
 
     pictures.slice(1).forEach(
       (picture, index) => {
-
         const image = el('img');
 
         image.src = picture.url;
@@ -369,15 +372,14 @@ function renderPhotographs(newsPost) {
 
         image.loading = 'lazy';
 
-        photoGrid.append(image);
+        image.decoding = 'async';
 
+        photoGrid.append(image);
       }
     );
 
     article.append(photoGrid);
-
   }
-
 }
 
 // ==========================================
@@ -385,7 +387,6 @@ function renderPhotographs(newsPost) {
 // ==========================================
 
 async function loadComments() {
-
   if (!commentsRoot || !postId) {
     return;
   }
@@ -393,23 +394,17 @@ async function loadComments() {
   commentsRoot.replaceChildren();
 
   try {
-
     const snapshot = await getDocs(
       query(
         collection(db, 'comments'),
-
         where('postId', '==', postId),
-
         where('status', '==', 'approved'),
-
         orderBy('createdAt', 'desc'),
-
         limit(50)
       )
     );
 
     if (snapshot.empty) {
-
       commentsRoot.append(
         el(
           'p',
@@ -419,11 +414,9 @@ async function loadComments() {
       );
 
       return;
-
     }
 
     snapshot.docs.forEach(document => {
-
       const comment = document.data();
 
       const node = el(
@@ -437,7 +430,6 @@ async function loadComments() {
           '',
           comment.name || 'Reader'
         ),
-
         el(
           'p',
           '',
@@ -446,11 +438,9 @@ async function loadComments() {
       );
 
       commentsRoot.append(node);
-
     });
 
   } catch (error) {
-
     console.warn(
       'Comments loading error:',
       error
@@ -463,9 +453,7 @@ async function loadComments() {
         'Comments are temporarily unavailable.'
       )
     );
-
   }
-
 }
 
 // ==========================================
@@ -473,13 +461,11 @@ async function loadComments() {
 // ==========================================
 
 async function recordArticleView() {
-
   if (!postId) {
     return;
   }
 
   try {
-
     const response = await fetch(
       VISIT_API,
       {
@@ -515,7 +501,6 @@ async function recordArticleView() {
     );
 
     if (snapshot.exists()) {
-
       const views = Number(
         snapshot.data().views || 0
       );
@@ -531,18 +516,14 @@ async function recordArticleView() {
           'Views: ' +
           views.toLocaleString('en-UG');
       }
-
     }
 
   } catch (error) {
-
     console.warn(
       'Article visitor counter unavailable:',
       error
     );
-
   }
-
 }
 
 // ==========================================
@@ -550,7 +531,6 @@ async function recordArticleView() {
 // ==========================================
 
 async function submitComment(payload) {
-
   const response = await fetch(
     COMMENT_API,
     {
@@ -568,23 +548,19 @@ async function submitComment(payload) {
     response.headers.get('content-type') || '';
 
   if (!contentType.includes('application/json')) {
-
     throw new Error(
       'Unexpected response from comment service.'
     );
-
   }
 
   const result = await response.json();
 
   if (!response.ok) {
-
     throw new Error(
       result.error ||
       result.message ||
       'Comment submission failed.'
     );
-
   }
 
   if (
@@ -597,7 +573,6 @@ async function submitComment(payload) {
   }
 
   return result;
-
 }
 
 // ==========================================
@@ -605,11 +580,9 @@ async function submitComment(payload) {
 // ==========================================
 
 if (commentForm) {
-
   commentForm.addEventListener(
     'submit',
     async event => {
-
       event.preventDefault();
 
       if (!post || !postId) {
@@ -634,7 +607,6 @@ if (commentForm) {
         $('#websiteField')?.value || '';
 
       try {
-
         if (button) {
           button.disabled = true;
         }
@@ -687,14 +659,12 @@ if (commentForm) {
         commentForm.reset();
 
       } catch (error) {
-
         console.error(
           'Comment submission error:',
           error
         );
 
         if (statusNode) {
-
           statusNode.textContent =
             'Comment could not be submitted: ' +
             (
@@ -702,20 +672,15 @@ if (commentForm) {
                 ? 'Unable to reach the comment service.'
                 : error.message
             );
-
         }
 
       } finally {
-
         if (button) {
           button.disabled = false;
         }
-
       }
-
     }
   );
-
 }
 
 // ==========================================
@@ -723,15 +688,15 @@ if (commentForm) {
 // ==========================================
 
 async function loadArticle() {
-
-  sharingSection?.classList.add('hidden');
+  sharingSection?.classList.add(
+    'hidden'
+  );
 
   if (!article) {
     return;
   }
 
   try {
-
     if (!postId) {
       throw new Error(
         'Article link is missing.'
@@ -763,9 +728,7 @@ async function loadArticle() {
 
     article.replaceChildren();
 
-    // ======================================
     // CATEGORY
-    // ======================================
 
     const category =
       typeof post.category === 'string'
@@ -776,7 +739,6 @@ async function loadArticle() {
       category &&
       category.toLowerCase() !== 'none'
     ) {
-
       article.append(
         el(
           'div',
@@ -784,12 +746,9 @@ async function loadArticle() {
           category
         )
       );
-
     }
 
-    // ======================================
     // HEADLINE
-    // ======================================
 
     article.append(
       el(
@@ -799,12 +758,9 @@ async function loadArticle() {
       )
     );
 
-    // ======================================
     // SHORT SUMMARY
-    // ======================================
 
     if (post.excerpt) {
-
       article.append(
         el(
           'p',
@@ -812,12 +768,9 @@ async function loadArticle() {
           post.excerpt
         )
       );
-
     }
 
-    // ======================================
     // DATE
-    // ======================================
 
     article.append(
       el(
@@ -830,15 +783,11 @@ async function loadArticle() {
       )
     );
 
-    // ======================================
     // PHOTOGRAPHS
-    // ======================================
 
     renderPhotographs(post);
 
-    // ======================================
     // FULL ARTICLE
-    // ======================================
 
     const body = el(
       'div',
@@ -852,34 +801,27 @@ async function loadArticle() {
 
     article.append(body);
 
-    // ======================================
     // SOURCES / REFERENCES
-    // ======================================
 
     if (
       typeof post.sources === 'string' &&
       post.sources.trim()
     ) {
-
       article.append(
         el(
           'h3',
           '',
           'Sources / References'
         ),
-
         el(
           'p',
           'muted',
           post.sources
         )
       );
-
     }
 
-    // ======================================
     // ARTICLE ACTIONS
-    // ======================================
 
     const actions = el(
       'div',
@@ -899,7 +841,6 @@ async function loadArticle() {
     quickShare.addEventListener(
       'click',
       () => {
-
         sharingSection?.scrollIntoView({
           behavior: window.matchMedia(
             '(prefers-reduced-motion: reduce)'
@@ -909,15 +850,12 @@ async function loadArticle() {
 
           block: 'center'
         });
-
       }
     );
 
     actions.append(quickShare);
 
-    // ======================================
     // ARTICLE VIEWS
-    // ======================================
 
     const viewCount = el(
       'span',
@@ -946,7 +884,6 @@ async function loadArticle() {
     ]);
 
   } catch (error) {
-
     console.error(
       'Article loading error:',
       error
@@ -966,12 +903,14 @@ async function loadArticle() {
         : 'Unable to load this article. Please check the link or connection.'
     );
 
-    commentForm?.classList.add('hidden');
+    commentForm?.classList.add(
+      'hidden'
+    );
 
-    sharingSection?.classList.add('hidden');
-
+    sharingSection?.classList.add(
+      'hidden'
+    );
   }
-
 }
 
 // ==========================================

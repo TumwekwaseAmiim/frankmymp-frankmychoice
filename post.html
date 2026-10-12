@@ -3,6 +3,7 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -10,10 +11,9 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <!-- ======================================
-       ARTICLE TITLE
-       Replaced by the build system for
-       individual published articles
+  <!-- =====================================
+       ARTICLE PAGE TITLE
+       Automatically updated by build.mjs
   ====================================== -->
 
   <title>Article | #FrankMyMP #FrankMyChoice</title>
@@ -23,7 +23,7 @@
     content="Read news and updates from Rwamwanja, Kamwenge, Uganda."
   >
 
-  <!-- ======================================
+  <!-- =====================================
        APP IDENTITY
   ====================================== -->
 
@@ -47,16 +47,11 @@
     content="default"
   >
 
-  <!-- ======================================
-       SOCIAL SHARING FALLBACK
+  <!-- =====================================
+       SOCIAL PREVIEW FALLBACK
 
-       tools/build.mjs will replace these
-       values when generating article pages.
-
-       og:image = first uploaded photograph
-       og:title = article headline
-       og:description = short excerpt
-       og:url = individual article URL
+       Cloudflare build.mjs replaces the
+       article metadata on generated pages.
   ====================================== -->
 
   <meta
@@ -84,8 +79,8 @@
     content="summary_large_image"
   >
 
-  <!-- ======================================
-       BROWSER FAVICONS
+  <!-- =====================================
+       BROWSER ICONS
   ====================================== -->
 
   <link
@@ -96,30 +91,26 @@
 
   <link
     rel="icon"
+    href="/assets/icons/favicon-32.png"
     type="image/png"
     sizes="32x32"
-    href="/assets/icons/favicon-32.png"
   >
 
   <link
     rel="icon"
+    href="/assets/icons/favicon-16.png"
     type="image/png"
     sizes="16x16"
-    href="/assets/icons/favicon-16.png"
   >
-
-  <!-- ======================================
-       IPHONE HOME-SCREEN ICON
-  ====================================== -->
 
   <link
     rel="apple-touch-icon"
-    sizes="180x180"
     href="/assets/icons/apple-touch-icon.png"
+    sizes="180x180"
   >
 
-  <!-- ======================================
-       PWA MANIFEST
+  <!-- =====================================
+       PWA
   ====================================== -->
 
   <link
@@ -127,8 +118,8 @@
     href="/manifest.webmanifest"
   >
 
-  <!-- ======================================
-       WEBSITE STYLES
+  <!-- =====================================
+       EXISTING WEBSITE STYLES
   ====================================== -->
 
   <link
@@ -136,12 +127,365 @@
     href="/css/style.css"
   >
 
+  <!-- =====================================
+       ARTICLE LANDING PAGE STYLES
+
+       Scoped to this page.
+       Does not replace homepage styling.
+  ====================================== -->
+
+  <style>
+
+    /* ------------------------------------
+       BASE
+    ------------------------------------ */
+
+    body.article-page {
+      margin: 0;
+      background: #fffdf4;
+      color: #191919;
+    }
+
+    /* ------------------------------------
+       HEADER NAVIGATION
+    ------------------------------------ */
+
+    .article-page .article-navigation {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .article-page .article-nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      min-height: 42px;
+      padding: 10px 16px;
+
+      color: #222;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+
+      border-radius: 999px;
+      transition:
+        background 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .article-page .article-nav-link:hover {
+      background: #fff3c7;
+    }
+
+    .article-page .article-nav-link.active {
+      color: #c81626;
+      background: #fff5d7;
+    }
+
+    .article-page .article-nav-link.admin {
+      border: 1px solid #e9e0bd;
+    }
+
+    /* ------------------------------------
+       NEWS STRAP / CATEGORY HEADER
+    ------------------------------------ */
+
+    .article-page .article-news-strap {
+      padding: 22px 0 0;
+    }
+
+    .article-page .article-news-bar {
+      display: flex;
+      align-items: center;
+
+      min-height: 54px;
+
+      background: #fff;
+      border: 1px solid #eee3c5;
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+    .article-page .article-news-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      align-self: stretch;
+
+      flex: 0 0 auto;
+
+      padding: 0 24px;
+
+      background: #c81626;
+      color: #fff;
+
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .article-page .article-news-text {
+      padding: 12px 18px;
+
+      color: #343434;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* ------------------------------------
+       BREADCRUMB
+    ------------------------------------ */
+
+    .article-page .article-breadcrumb {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+
+      gap: 9px;
+
+      margin: 24px 0 18px;
+
+      font-size: 13px;
+      color: #686868;
+    }
+
+    .article-page .article-breadcrumb a {
+      color: #c81626;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .article-page .article-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* ------------------------------------
+       ARTICLE LANDING WRAPPER
+    ------------------------------------ */
+
+    .article-page .landing-main {
+      width: min(100% - 32px, 1020px);
+      margin: 0 auto;
+      padding-bottom: 48px;
+    }
+
+    .article-page .article-page-heading {
+      margin-bottom: 20px;
+    }
+
+    .article-page .article-page-heading h2 {
+      margin: 0;
+
+      padding-bottom: 13px;
+
+      font-size: clamp(20px, 2.5vw, 27px);
+      font-weight: 800;
+
+      border-bottom: 3px solid #242424;
+    }
+
+    /* ------------------------------------
+       ARTICLE CONTENT
+    ------------------------------------ */
+
+    .article-page .article-shell {
+      background: #fff;
+
+      border: 1px solid #eee5d4;
+      border-radius: 16px;
+
+      padding: clamp(18px, 4vw, 40px);
+
+      box-shadow: 0 8px 24px rgba(
+        0, 0, 0, 0.025
+      );
+    }
+
+    .article-page .article-shell #article {
+      min-width: 0;
+    }
+
+    .article-page #article h1 {
+      margin-top: 10px;
+      margin-bottom: 14px;
+
+      font-size: clamp(27px, 4vw, 43px);
+      line-height: 1.22;
+      letter-spacing: -0.7px;
+      overflow-wrap: anywhere;
+    }
+
+    .article-page #article .post-summary {
+      color: #545454;
+      line-height: 1.75;
+      font-size: clamp(15px, 2vw, 18px);
+    }
+
+    .article-page #article .meta {
+      margin-top: 12px;
+      color: #818181;
+    }
+
+    /* Full photographs without cropping */
+
+    .article-page #article img.photo {
+      display: block;
+
+      width: 100%;
+      height: auto;
+      max-height: none;
+
+      object-fit: contain;
+
+      margin: 24px auto;
+
+      border-radius: 12px;
+    }
+
+    .article-page #article .photo-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .article-page #article .photo-grid img {
+      width: 100%;
+      height: auto;
+
+      object-fit: contain;
+
+      border-radius: 10px;
+    }
+
+    .article-page #article .article-body {
+      margin-top: 24px;
+
+      line-height: 1.85;
+      font-size: 16px;
+
+      overflow-wrap: anywhere;
+    }
+
+    .article-page #article .article-body p {
+      margin: 0 0 20px;
+    }
+
+    /* ------------------------------------
+       SHARING AND COMMENTS
+    ------------------------------------ */
+
+    .article-page .landing-section {
+      margin-top: 25px;
+
+      padding: clamp(18px, 3vw, 28px);
+
+      border: 1px solid #eee5d4;
+      border-radius: 14px;
+
+      background: #fff;
+    }
+
+    .article-page .landing-section h2 {
+      margin-top: 0;
+      font-size: 23px;
+    }
+
+    .article-page .share-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .article-page .share-buttons .btn {
+      text-decoration: none;
+    }
+
+    .article-page .landing-section .field {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* ------------------------------------
+       MOBILE
+    ------------------------------------ */
+
+    @media (max-width: 700px) {
+
+      .article-page .header-inner {
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .article-page .brand {
+        margin-right: auto;
+      }
+
+      .article-page .article-navigation {
+        width: 100%;
+
+        justify-content: flex-start;
+        gap: 6px;
+      }
+
+      .article-page .article-nav-link {
+        padding: 9px 12px;
+        min-height: 38px;
+        font-size: 13px;
+      }
+
+      .article-page .article-news-strap {
+        padding-top: 14px;
+      }
+
+      .article-page .article-news-label {
+        padding: 0 15px;
+      }
+
+      .article-page .article-news-text {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .article-page .landing-main {
+        width: calc(100% - 22px);
+      }
+
+      .article-page .article-shell {
+        padding: 17px;
+      }
+
+      .article-page #article h1 {
+        font-size: 27px;
+      }
+
+      .article-page #article .photo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .article-page .landing-section {
+        padding: 17px;
+      }
+    }
+
+  </style>
+
 </head>
 
-<body>
+<body class="article-page">
 
-  <!-- ======================================
-       LOCATION BAR
+  <!-- =====================================
+       TOP LOCATION BAR
   ====================================== -->
 
   <div class="topbar">
@@ -152,8 +496,8 @@
 
   </div>
 
-  <!-- ======================================
-       HEADER
+  <!-- =====================================
+       BRANDING AND SITE NAVIGATION
   ====================================== -->
 
   <header class="header">
@@ -162,7 +506,11 @@
 
       <!-- BRAND -->
 
-      <a href="/" class="brand">
+      <a
+        href="/"
+        class="brand"
+        aria-label="#FrankMyMP #FrankMyChoice homepage"
+      >
 
         <span>
           <b class="red">#Frank</b>MyMP
@@ -174,52 +522,135 @@
 
       </a>
 
-      <!-- NAVIGATION -->
+      <!-- MAIN NAVIGATION -->
 
-      <div class="row">
+      <nav
+        class="article-navigation"
+        aria-label="Main navigation"
+      >
 
         <a
           href="/"
-          class="pill"
+          class="article-nav-link"
         >
-          ← All News
+          Home
+        </a>
+
+        <a
+          href="/#latest"
+          class="article-nav-link active"
+        >
+          Latest News
         </a>
 
         <a
           href="/admin/"
-          class="pill"
+          class="article-nav-link admin"
         >
           Admin
         </a>
 
-      </div>
+      </nav>
 
     </div>
 
   </header>
 
-  <!-- ======================================
-       MAIN ARTICLE
+  <!-- =====================================
+       NEWS HEADER
   ====================================== -->
 
-  <main class="post-main">
+  <section class="article-news-strap">
 
-    <!-- FIREBASE ARTICLE CONTENT -->
+    <div class="wrap">
 
-    <div id="article">
+      <div class="article-news-bar">
 
-      <div class="empty">
-        Loading article…
+        <div class="article-news-label">
+          NEWS
+        </div>
+
+        <div class="article-news-text">
+          Latest reports and updates from
+          Rwamwanja, Kamwenge and Uganda
+        </div>
+
       </div>
 
     </div>
 
-    <!-- ====================================
-         ARTICLE SOCIAL SHARING
-    ===================================== -->
+  </section>
+
+  <!-- =====================================
+       ARTICLE LANDING PAGE
+  ====================================== -->
+
+  <main class="landing-main">
+
+    <!-- BREADCRUMB -->
+
+    <nav
+      class="article-breadcrumb"
+      aria-label="Breadcrumb"
+    >
+
+      <a href="/">
+        Home
+      </a>
+
+      <span aria-hidden="true">
+        ›
+      </span>
+
+      <a href="/#latest">
+        News
+      </a>
+
+      <span aria-hidden="true">
+        ›
+      </span>
+
+      <span aria-current="page">
+        Article
+      </span>
+
+    </nav>
+
+    <!-- PAGE HEADING -->
+
+    <div class="article-page-heading">
+
+      <h2>
+        News Article
+      </h2>
+
+    </div>
+
+    <!-- ==================================
+         ARTICLE CONTENT
+
+         js/post.js populates this area
+         using Firebase Firestore.
+    =================================== -->
+
+    <div class="article-shell post-main">
+
+      <div id="article">
+
+        <div class="empty">
+          Loading article…
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================================
+         ARTICLE SHARING
+    =================================== -->
 
     <section
-      class="article-sharing hidden"
+      class="article-sharing landing-section hidden"
       aria-label="Share this article"
     >
 
@@ -228,7 +659,8 @@
       </h2>
 
       <p class="muted">
-        Forward this news story to friends and family.
+        Share this story with friends,
+        family and the community.
       </p>
 
       <div class="share-buttons">
@@ -269,7 +701,7 @@
           X
         </a>
 
-        <!-- COPY ARTICLE LINK -->
+        <!-- COPY LINK -->
 
         <button
           id="copyArticleLink"
@@ -290,19 +722,24 @@
 
     </section>
 
-    <!-- ====================================
+    <!-- ==================================
          READER COMMENTS
-    ===================================== -->
+    =================================== -->
 
-    <section class="comments" id="reader-comments">
+    <section
+      class="comments landing-section"
+      id="reader-comments"
+    >
 
       <h2>
         Reader Comments
       </h2>
 
       <p class="muted">
-        Comments are reviewed before being displayed.
-        Please keep your contribution respectful and factual.
+        Comments are reviewed before
+        being displayed. Please keep
+        your contribution respectful
+        and factual.
       </p>
 
       <!-- APPROVED COMMENTS -->
@@ -313,14 +750,14 @@
         Leave a comment
       </h3>
 
-      <!-- COMMENT SUBMISSION FORM -->
+      <!-- COMMENT FORM -->
 
       <form
         class="form"
         id="commentForm"
       >
 
-        <!-- READER NAME -->
+        <!-- NAME -->
 
         <label for="commentName">
           Your name
@@ -347,10 +784,11 @@
           id="commentText"
           name="comment"
           maxlength="2000"
+          rows="5"
           required
         ></textarea>
 
-        <!-- HONEYPOT SPAM PROTECTION -->
+        <!-- HONEYPOT -->
 
         <div
           class="hidden"
@@ -371,7 +809,7 @@
 
         </div>
 
-        <!-- SUBMIT COMMENT -->
+        <!-- SUBMIT -->
 
         <button
           class="btn"
@@ -380,7 +818,7 @@
           Submit for approval
         </button>
 
-        <!-- STATUS MESSAGE -->
+        <!-- COMMENT STATUS -->
 
         <p
           id="commentStatus"
@@ -393,9 +831,30 @@
 
     </section>
 
+    <!-- ==================================
+         RETURN TO HOMEPAGE
+    =================================== -->
+
+    <div
+      style="
+        text-align:center;
+        margin:28px 0;
+      "
+    >
+
+      <a
+        href="/"
+        class="btn secondary"
+        style="text-decoration:none;"
+      >
+        ← Back to All News
+      </a>
+
+    </div>
+
   </main>
 
-  <!-- ======================================
+  <!-- =====================================
        FOOTER
   ====================================== -->
 
@@ -415,15 +874,15 @@
 
   </footer>
 
-  <!-- ======================================
-       ARTICLE JAVASCRIPT
+  <!-- =====================================
+       FIREBASE ARTICLE SCRIPT
 
-       Handles:
-       - Fetching news from Firebase
-       - Loading article photographs
-       - Displaying comments
-       - Article visit counting
-       - WhatsApp/Facebook/X sharing
+       Preserves:
+       - Article loading
+       - Cloudinary photos
+       - Sharing
+       - Reader comments
+       - Visitor counting
   ====================================== -->
 
   <script
@@ -432,4 +891,5 @@
   ></script>
 
 </body>
+
 </html>

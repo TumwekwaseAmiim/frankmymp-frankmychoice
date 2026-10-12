@@ -3,16 +3,20 @@
    #FrankMyMP #FrankMyChoice
    PUBLIC NEWS ARTICLE PAGE
 
-   Features:
+   FEATURES:
    - Firebase Firestore articles
-   - Cloudinary photographs
-   - Cloudflare comments
-   - Article visitor counts
-   - Detailed WhatsApp sharing
-   - Facebook and X sharing
+   - Cloudinary article photographs
+   - Branded NEWS Card image sharing
+   - Extended article text and link sharing
+   - WhatsApp, Facebook and X
    - Copy article URL
+   - Cloudflare comment submission
+   - Approved reader comments
+   - Article visitor counts
    - 10-day publication window
-   - Local and public article links
+   - Mobile and desktop support
+
+   Developer: Eng. Amiim Tumwekwase
 ===================================================== */
 
 // ==========================================
@@ -44,7 +48,9 @@ import {
   message,
   paragraphs,
   shareSummary,
-  shareMessage
+  shareMessage,
+  share,
+  shareNewsCard
 } from './ui.js';
 
 import {
@@ -59,11 +65,14 @@ import {
 const API_BASE =
   'https://frank-news-api.tumwekwaseamiim.workers.dev';
 
-const COMMENT_API = API_BASE + '/comments';
+const COMMENT_API =
+  API_BASE + '/comments';
 
-const VISIT_API = API_BASE + '/record-visit';
+const VISIT_API =
+  API_BASE + '/record-visit';
 
-const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+const TEN_DAYS_MS =
+  10 * 24 * 60 * 60 * 1000;
 
 const MAX_NAME_LENGTH = 80;
 
@@ -87,7 +96,8 @@ const sharingSection =
 const year = $('#year');
 
 if (year) {
-  year.textContent = new Date().getFullYear();
+  year.textContent =
+    new Date().getFullYear();
 }
 
 let post = null;
@@ -104,9 +114,14 @@ function getArticleId() {
   // Public article:
   // /post/ARTICLE_ID/
 
-  if (parts[0] === 'post' && parts[1]) {
+  if (
+    parts[0] === 'post' &&
+    parts[1]
+  ) {
     try {
-      return decodeURIComponent(parts[1]);
+      return decodeURIComponent(
+        parts[1]
+      );
     } catch {
       return '';
     }
@@ -133,8 +148,9 @@ const postId = getArticleId();
 // ==========================================
 
 function getPublicArticleUrl() {
-  const base = String(SITE_URL || '')
-    .replace(/\/+$/, '');
+  const base = String(
+    SITE_URL || ''
+  ).replace(/\/+$/, '');
 
   if (!postId) {
     return base + '/';
@@ -149,7 +165,7 @@ function getPublicArticleUrl() {
 }
 
 // ==========================================
-// NEWS EXPIRATION
+// ARTICLE PUBLICATION WINDOW
 // ==========================================
 
 function isRecent(value) {
@@ -159,22 +175,195 @@ function isRecent(value) {
 
   let milliseconds = 0;
 
-  if (typeof value.toMillis === 'function') {
+  if (
+    typeof value.toMillis === 'function'
+  ) {
     milliseconds = value.toMillis();
 
   } else if (
     typeof value.seconds === 'number'
   ) {
-    milliseconds = value.seconds * 1000;
+    milliseconds =
+      value.seconds * 1000;
 
   } else {
-    milliseconds = new Date(value).getTime();
+    milliseconds =
+      new Date(value).getTime();
   }
 
   return (
     Number.isFinite(milliseconds) &&
     milliseconds <= Date.now() &&
     Date.now() - milliseconds < TEN_DAYS_MS
+  );
+}
+
+// ==========================================
+// SHARING STATUS
+// ==========================================
+
+function setShareStatus(text) {
+  const node = $('#shareStatus');
+
+  if (node) {
+    node.textContent = text;
+  }
+}
+
+// ==========================================
+// CREATE PRIMARY SHARING BUTTONS
+//
+// 1. Share NEWS Card
+// 2. Share Article Link
+//
+// Both can be used from the article page.
+// ==========================================
+
+function setupPrimaryShareButtons(
+  newsPost,
+  url,
+  title,
+  summary
+) {
+  if (!sharingSection) {
+    return;
+  }
+
+  // Avoid adding duplicate controls.
+  const previous = $(
+    '#articlePrimarySharing',
+    sharingSection
+  );
+
+  previous?.remove();
+
+  const buttonArea = el(
+    'div',
+    'actions'
+  );
+
+  buttonArea.id =
+    'articlePrimarySharing';
+
+  buttonArea.style.display =
+    'flex';
+
+  buttonArea.style.flexWrap =
+    'wrap';
+
+  buttonArea.style.gap =
+    '10px';
+
+  buttonArea.style.marginBottom =
+    '18px';
+
+  // ======================================
+  // SHARE ACTUAL BRANDED IMAGE
+  // ======================================
+
+  const imageButton = el(
+    'button',
+    'btn',
+    '🖼 Share NEWS Card'
+  );
+
+  imageButton.type = 'button';
+
+  imageButton.setAttribute(
+    'aria-label',
+    'Share the NEWS image and article text'
+  );
+
+  imageButton.style.background =
+    '#FFE15C';
+
+  imageButton.style.color =
+    '#171717';
+
+  imageButton.style.border =
+    '1px solid #E3B820';
+
+  imageButton.addEventListener(
+    'click',
+    async () => {
+      const previousText =
+        imageButton.textContent;
+
+      imageButton.disabled = true;
+
+      imageButton.textContent =
+        'Preparing NEWS Card…';
+
+      setShareStatus(
+        'Preparing the branded NEWS photograph…'
+      );
+
+      try {
+        await shareNewsCard(
+          newsPost
+        );
+
+        setShareStatus(
+          'If your sharing app does not include the caption, use Share Link to send the article text and URL.'
+        );
+
+      } catch (error) {
+        console.warn(
+          'NEWS card sharing failed:',
+          error
+        );
+
+        setShareStatus(
+          'NEWS card sharing is unavailable. Please try Share Link.'
+        );
+
+      } finally {
+        imageButton.disabled = false;
+
+        imageButton.textContent =
+          previousText;
+      }
+    }
+  );
+
+  // ======================================
+  // SHARE ARTICLE TEXT AND URL
+  // ======================================
+
+  const linkButton = el(
+    'button',
+    'btn secondary',
+    '↗ Share Link'
+  );
+
+  linkButton.type = 'button';
+
+  linkButton.setAttribute(
+    'aria-label',
+    'Share the article summary and website link'
+  );
+
+  linkButton.addEventListener(
+    'click',
+    async () => {
+      await share(
+        url,
+        title,
+        summary
+      );
+    }
+  );
+
+  buttonArea.append(
+    imageButton,
+    linkButton
+  );
+
+  // Place the two new buttons above
+  // the original WhatsApp/Facebook/X links.
+
+  sharingSection.prepend(
+    buttonArea
   );
 }
 
@@ -189,9 +378,12 @@ function setupSharing(newsPost) {
   const description =
     newsPost.excerpt || '';
 
-  const url = getPublicArticleUrl();
+  const url =
+    getPublicArticleUrl();
 
-  // Use real article text for the message.
+  // Actual saved article text,
+  // approximately 500 characters.
+
   const summary = shareSummary(
     newsPost,
     SHARE_TEXT_LENGTH
@@ -203,11 +395,12 @@ function setupSharing(newsPost) {
     summary
   );
 
-  document.title = `${title} | ${SITE_TITLE}`;
+  document.title =
+    `${title} | ${SITE_TITLE}`;
 
-  // Browser description only.
-  // WhatsApp uses the server-generated
-  // Open Graph metadata for the image.
+  // Update the browser's description.
+  // The generated HTML already carries
+  // the Open Graph sharing metadata.
 
   const descriptionMeta =
     document.querySelector(
@@ -218,97 +411,105 @@ function setupSharing(newsPost) {
     descriptionMeta.setAttribute(
       'content',
       description ||
-        'Read the latest news and updates.'
+      'Read the latest news and updates.'
     );
   }
 
   // ======================================
-  // WHATSAPP
-  //
-  // Sends:
-  // - NEWS UPDATE
-  // - Headline
-  // - Extended article text
-  // - Article landing page URL
-  //
-  // WhatsApp can still fetch the branded
-  // Open Graph preview from the article URL.
+  // TWO PRIMARY SHARING OPTIONS
   // ======================================
 
-  const whatsapp = $('#shareWhatsApp');
+  setupPrimaryShareButtons(
+    newsPost,
+    url,
+    title,
+    summary
+  );
+
+  // ======================================
+  // WHATSAPP
+  //
+  // Shares the extended text and link.
+  // The browser does not control whether
+  // WhatsApp displays a large OG preview.
+  // ======================================
+
+  const whatsapp =
+    $('#shareWhatsApp');
 
   if (whatsapp) {
     whatsapp.href =
       'https://wa.me/?text=' +
-      encodeURIComponent(fullShareText);
+      encodeURIComponent(
+        fullShareText
+      );
 
-    whatsapp.target = '_blank';
+    whatsapp.target =
+      '_blank';
 
-    whatsapp.rel = 'noopener noreferrer';
+    whatsapp.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
   // FACEBOOK
-  //
-  // Facebook controls shared preview text.
-  // The article's OG tags supply its
-  // headline, image and description.
   // ======================================
 
-  const facebook = $('#shareFacebook');
+  const facebook =
+    $('#shareFacebook');
 
   if (facebook) {
     facebook.href =
       'https://www.facebook.com/sharer/sharer.php?u=' +
       encodeURIComponent(url);
 
-    facebook.target = '_blank';
+    facebook.target =
+      '_blank';
 
-    facebook.rel = 'noopener noreferrer';
+    facebook.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
   // X
-  //
-  // Short text to avoid overly long posts.
   // ======================================
 
-  const xButton = $('#shareX');
+  const xButton =
+    $('#shareX');
 
   if (xButton) {
-    const xText =
-      '📰 ' + title;
-
     xButton.href =
       'https://twitter.com/intent/tweet?text=' +
-      encodeURIComponent(xText) +
+      encodeURIComponent(
+        '📰 ' + title
+      ) +
       '&url=' +
       encodeURIComponent(url);
 
-    xButton.target = '_blank';
+    xButton.target =
+      '_blank';
 
-    xButton.rel = 'noopener noreferrer';
+    xButton.rel =
+      'noopener noreferrer';
   }
 
   // ======================================
-  // COPY LINK
-  //
-  // Keeps the existing copy-link behavior.
+  // COPY ARTICLE URL
   // ======================================
 
-  const copyButton = $('#copyArticleLink');
+  const copyButton =
+    $('#copyArticleLink');
 
   if (copyButton) {
     copyButton.onclick = async () => {
       try {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(
+          url
+        );
 
-        const status = $('#shareStatus');
-
-        if (status) {
-          status.textContent =
-            'Article link copied successfully.';
-        }
+        setShareStatus(
+          'Article link copied successfully.'
+        );
 
       } catch (error) {
         window.prompt(
@@ -319,7 +520,9 @@ function setupSharing(newsPost) {
     };
   }
 
-  sharingSection?.classList.remove('hidden');
+  sharingSection?.classList.remove(
+    'hidden'
+  );
 }
 
 // ==========================================
@@ -331,15 +534,19 @@ function renderPhotographs(newsPost) {
     Array.isArray(newsPost.images)
       ? newsPost.images
           .map(item => {
-            if (typeof item === 'string') {
-              return { url: item };
+            if (
+              typeof item === 'string'
+            ) {
+              return {
+                url: item
+              };
             }
 
             return {
               ...item,
               url:
-                item?.url ||
                 item?.secure_url ||
+                item?.url ||
                 item?.src ||
                 ''
             };
@@ -355,29 +562,40 @@ function renderPhotographs(newsPost) {
     return;
   }
 
+  // ======================================
   // MAIN PHOTOGRAPH
+  // ======================================
 
   const mainPhoto = el(
     'img',
     'photo'
   );
 
-  mainPhoto.src = imageOf({
-    images: pictures
-  });
+  mainPhoto.src =
+    imageOf({
+      images: pictures
+    });
 
   mainPhoto.alt =
-    newsPost.title || 'News photograph';
+    newsPost.title ||
+    'News photograph';
 
-  mainPhoto.loading = 'eager';
+  mainPhoto.loading =
+    'eager';
 
-  mainPhoto.decoding = 'async';
+  mainPhoto.decoding =
+    'async';
 
-  mainPhoto.style.marginTop = '25px';
+  mainPhoto.style.marginTop =
+    '25px';
 
-  article.append(mainPhoto);
+  article.append(
+    mainPhoto
+  );
 
+  // ======================================
   // ADDITIONAL PHOTOGRAPHS
+  // ======================================
 
   if (pictures.length > 1) {
     const photoGrid = el(
@@ -387,22 +605,32 @@ function renderPhotographs(newsPost) {
 
     pictures.slice(1).forEach(
       (picture, index) => {
-        const image = el('img');
+        const image = el(
+          'img'
+        );
 
-        image.src = picture.url;
+        image.src =
+          picture.url;
 
         image.alt =
-          'Article photograph ' + (index + 2);
+          'Article photograph ' +
+          (index + 2);
 
-        image.loading = 'lazy';
+        image.loading =
+          'lazy';
 
-        image.decoding = 'async';
+        image.decoding =
+          'async';
 
-        photoGrid.append(image);
+        photoGrid.append(
+          image
+        );
       }
     );
 
-    article.append(photoGrid);
+    article.append(
+      photoGrid
+    );
   }
 }
 
@@ -411,7 +639,10 @@ function renderPhotographs(newsPost) {
 // ==========================================
 
 async function loadComments() {
-  if (!commentsRoot || !postId) {
+  if (
+    !commentsRoot ||
+    !postId
+  ) {
     return;
   }
 
@@ -420,10 +651,28 @@ async function loadComments() {
   try {
     const snapshot = await getDocs(
       query(
-        collection(db, 'comments'),
-        where('postId', '==', postId),
-        where('status', '==', 'approved'),
-        orderBy('createdAt', 'desc'),
+        collection(
+          db,
+          'comments'
+        ),
+
+        where(
+          'postId',
+          '==',
+          postId
+        ),
+
+        where(
+          'status',
+          '==',
+          'approved'
+        ),
+
+        orderBy(
+          'createdAt',
+          'desc'
+        ),
+
         limit(50)
       )
     );
@@ -440,29 +689,36 @@ async function loadComments() {
       return;
     }
 
-    snapshot.docs.forEach(document => {
-      const comment = document.data();
+    snapshot.docs.forEach(
+      document => {
+        const comment =
+          document.data();
 
-      const node = el(
-        'div',
-        'comment'
-      );
+        const node = el(
+          'div',
+          'comment'
+        );
 
-      node.append(
-        el(
-          'strong',
-          '',
-          comment.name || 'Reader'
-        ),
-        el(
-          'p',
-          '',
-          comment.text || ''
-        )
-      );
+        node.append(
+          el(
+            'strong',
+            '',
+            comment.name ||
+            'Reader'
+          ),
 
-      commentsRoot.append(node);
-    });
+          el(
+            'p',
+            '',
+            comment.text || ''
+          )
+        );
+
+        commentsRoot.append(
+          node
+        );
+      }
+    );
 
   } catch (error) {
     console.warn(
@@ -481,7 +737,7 @@ async function loadComments() {
 }
 
 // ==========================================
-// ARTICLE VIEW COUNTER
+// ARTICLE VISITOR COUNTER
 // ==========================================
 
 async function recordArticleView() {
@@ -496,7 +752,8 @@ async function recordArticleView() {
         method: 'POST',
 
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type':
+            'application/json'
         },
 
         body: JSON.stringify({
@@ -506,7 +763,8 @@ async function recordArticleView() {
       }
     );
 
-    const result = await response.json();
+    const result =
+      await response.json();
 
     if (
       !response.ok ||
@@ -518,10 +776,14 @@ async function recordArticleView() {
       );
     }
 
-    // Retrieve updated view count.
+    // Retrieve updated count.
 
     const snapshot = await getDoc(
-      doc(db, 'posts', postId)
+      doc(
+        db,
+        'posts',
+        postId
+      )
     );
 
     if (snapshot.exists()) {
@@ -533,12 +795,15 @@ async function recordArticleView() {
         post.views = views;
       }
 
-      const counter = $('#articleViewCount');
+      const counter =
+        $('#articleViewCount');
 
       if (counter) {
         counter.textContent =
           'Views: ' +
-          views.toLocaleString('en-UG');
+          views.toLocaleString(
+            'en-UG'
+          );
       }
     }
 
@@ -561,23 +826,33 @@ async function submitComment(payload) {
       method: 'POST',
 
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type':
+          'application/json'
       },
 
-      body: JSON.stringify(payload)
+      body: JSON.stringify(
+        payload
+      )
     }
   );
 
   const contentType =
-    response.headers.get('content-type') || '';
+    response.headers.get(
+      'content-type'
+    ) || '';
 
-  if (!contentType.includes('application/json')) {
+  if (
+    !contentType.includes(
+      'application/json'
+    )
+  ) {
     throw new Error(
       'Unexpected response from comment service.'
     );
   }
 
-  const result = await response.json();
+  const result =
+    await response.json();
 
   if (!response.ok) {
     throw new Error(
@@ -609,7 +884,10 @@ if (commentForm) {
     async event => {
       event.preventDefault();
 
-      if (!post || !postId) {
+      if (
+        !post ||
+        !postId
+      ) {
         return;
       }
 
@@ -622,13 +900,16 @@ if (commentForm) {
         $('#commentStatus');
 
       const name =
-        $('#commentName')?.value.trim() || '';
+        $('#commentName')
+          ?.value.trim() || '';
 
       const text =
-        $('#commentText')?.value.trim() || '';
+        $('#commentText')
+          ?.value.trim() || '';
 
       const website =
-        $('#websiteField')?.value || '';
+        $('#websiteField')
+          ?.value || '';
 
       try {
         if (button) {
@@ -640,7 +921,9 @@ if (commentForm) {
             'Submitting your comment…';
         }
 
+        // ==================================
         // VALIDATION
+        // ==================================
 
         if (!name || !text) {
           throw new Error(
@@ -648,25 +931,35 @@ if (commentForm) {
           );
         }
 
-        if (name.length > MAX_NAME_LENGTH) {
+        if (
+          name.length >
+          MAX_NAME_LENGTH
+        ) {
           throw new Error(
             'Name is too long.'
           );
         }
 
-        if (text.length > MAX_COMMENT_LENGTH) {
+        if (
+          text.length >
+          MAX_COMMENT_LENGTH
+        ) {
           throw new Error(
             'Comment must not exceed 2000 characters.'
           );
         }
 
-        if (website.trim()) {
+        if (
+          website.trim()
+        ) {
           throw new Error(
             'Submission could not be accepted.'
           );
         }
 
-        // SEND TO CLOUDFLARE
+        // ==================================
+        // SEND COMMENT TO CLOUDFLARE
+        // ==================================
 
         await submitComment({
           postId,
@@ -712,7 +1005,9 @@ if (commentForm) {
 // ==========================================
 
 async function loadArticle() {
-  sharingSection?.classList.add('hidden');
+  sharingSection?.classList.add(
+    'hidden'
+  );
 
   if (!article) {
     return;
@@ -726,21 +1021,39 @@ async function loadArticle() {
     }
 
     const snapshot = await getDoc(
-      doc(db, 'posts', postId)
+      doc(
+        db,
+        'posts',
+        postId
+      )
     );
 
     if (!snapshot.exists()) {
-      throw new Error('Story not found');
+      throw new Error(
+        'Story not found'
+      );
     }
 
-    const data = snapshot.data();
+    const data =
+      snapshot.data();
 
-    if (data.status !== 'published') {
-      throw new Error('Story not found');
+    if (
+      data.status !==
+      'published'
+    ) {
+      throw new Error(
+        'Story not found'
+      );
     }
 
-    if (!isRecent(data.publishedAt)) {
-      throw new Error('Story expired');
+    if (
+      !isRecent(
+        data.publishedAt
+      )
+    ) {
+      throw new Error(
+        'Story expired'
+      );
     }
 
     post = {
@@ -750,7 +1063,9 @@ async function loadArticle() {
 
     article.replaceChildren();
 
+    // ======================================
     // CATEGORY
+    // ======================================
 
     const category =
       typeof post.category === 'string'
@@ -770,7 +1085,9 @@ async function loadArticle() {
       );
     }
 
+    // ======================================
     // HEADLINE
+    // ======================================
 
     article.append(
       el(
@@ -780,7 +1097,9 @@ async function loadArticle() {
       )
     );
 
-    // SHORT SUMMARY
+    // ======================================
+    // SHORT DESCRIPTION
+    // ======================================
 
     if (post.excerpt) {
       article.append(
@@ -792,7 +1111,9 @@ async function loadArticle() {
       );
     }
 
+    // ======================================
     // DATE
+    // ======================================
 
     article.append(
       el(
@@ -805,11 +1126,17 @@ async function loadArticle() {
       )
     );
 
-    // PHOTOGRAPHS
+    // ======================================
+    // ARTICLE PHOTOGRAPHS
+    // ======================================
 
-    renderPhotographs(post);
+    renderPhotographs(
+      post
+    );
 
-    // FULL ARTICLE
+    // ======================================
+    // COMPLETE STORY
+    // ======================================
 
     const body = el(
       'div',
@@ -818,12 +1145,18 @@ async function loadArticle() {
 
     paragraphs(
       body,
-      post.body || post.excerpt || ''
+      post.body ||
+      post.excerpt ||
+      ''
     );
 
-    article.append(body);
+    article.append(
+      body
+    );
 
+    // ======================================
     // SOURCES / REFERENCES
+    // ======================================
 
     if (
       typeof post.sources === 'string' &&
@@ -835,6 +1168,7 @@ async function loadArticle() {
           '',
           'Sources / References'
         ),
+
         el(
           'p',
           'muted',
@@ -843,14 +1177,17 @@ async function loadArticle() {
       );
     }
 
+    // ======================================
     // ARTICLE ACTIONS
+    // ======================================
 
     const actions = el(
       'div',
       'actions'
     );
 
-    actions.style.marginTop = '24px';
+    actions.style.marginTop =
+      '24px';
 
     const quickShare = el(
       'button',
@@ -858,26 +1195,33 @@ async function loadArticle() {
       'Share this story ↗'
     );
 
-    quickShare.type = 'button';
+    quickShare.type =
+      'button';
 
     quickShare.addEventListener(
       'click',
       () => {
         sharingSection?.scrollIntoView({
-          behavior: window.matchMedia(
-            '(prefers-reduced-motion: reduce)'
-          ).matches
-            ? 'auto'
-            : 'smooth',
+          behavior:
+            window.matchMedia(
+              '(prefers-reduced-motion: reduce)'
+            ).matches
+              ? 'auto'
+              : 'smooth',
 
-          block: 'center'
+          block:
+            'center'
         });
       }
     );
 
-    actions.append(quickShare);
+    actions.append(
+      quickShare
+    );
 
-    // ARTICLE VIEWS
+    // ======================================
+    // ARTICLE VIEW COUNT
+    // ======================================
 
     const viewCount = el(
       'span',
@@ -887,18 +1231,28 @@ async function loadArticle() {
           .toLocaleString('en-UG')
     );
 
-    viewCount.id = 'articleViewCount';
+    viewCount.id =
+      'articleViewCount';
 
-    actions.append(viewCount);
+    actions.append(
+      viewCount
+    );
 
-    article.append(actions);
+    article.append(
+      actions
+    );
 
-    // ACTIVATE SHARING
+    // ======================================
+    // ACTIVATE SOCIAL SHARING
+    // ======================================
 
-    setupSharing(post);
+    setupSharing(
+      post
+    );
 
-    // LOAD COMMENTS AND COUNT VIEW
-    // INDEPENDENTLY
+    // ======================================
+    // COMMENTS AND VISITOR COUNT
+    // ======================================
 
     await Promise.allSettled([
       loadComments(),
@@ -916,7 +1270,9 @@ async function loadArticle() {
     const unavailable = [
       'Story not found',
       'Story expired'
-    ].includes(error.message);
+    ].includes(
+      error.message
+    );
 
     message(
       article,
@@ -925,9 +1281,13 @@ async function loadArticle() {
         : 'Unable to load this article. Please check the link or connection.'
     );
 
-    commentForm?.classList.add('hidden');
+    commentForm?.classList.add(
+      'hidden'
+    );
 
-    sharingSection?.classList.add('hidden');
+    sharingSection?.classList.add(
+      'hidden'
+    );
   }
 }
 

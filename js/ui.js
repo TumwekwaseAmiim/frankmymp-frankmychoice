@@ -1,8 +1,16 @@
 
-/* ==========================================
+/* =====================================================
    #FrankMyMP #FrankMyChoice
-   Public Interface Utilities
-========================================== */
+   PUBLIC INTERFACE UTILITIES
+
+   News Cards
+   Complete Photographs
+   Article Links
+   Native Sharing
+   Mobile Navigation
+   Date Formatting
+   Comments and Article Helpers
+===================================================== */
 
 // ==========================================
 // DOM HELPERS
@@ -11,8 +19,11 @@
 export const $ = (selector, root = document) =>
   root.querySelector(selector);
 
-export function el(tag, className = '', text = '') {
-
+export function el(
+  tag,
+  className = "",
+  text = ""
+) {
   const node = document.createElement(tag);
 
   if (className) {
@@ -31,16 +42,14 @@ export function el(tag, className = '', text = '') {
 // ==========================================
 
 const PUBLIC_SITE_URL =
-  'https://frankmymp-frankmychoice.pages.dev';
+  "https://frankmymp-frankmychoice.pages.dev";
 
 function isLocalDevelopment() {
-
   return (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '0.0.0.0'
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "0.0.0.0"
   );
-
 }
 
 // ==========================================
@@ -48,21 +57,21 @@ function isLocalDevelopment() {
 // ==========================================
 
 export const fmtDate = value => {
-
   const date =
     value?.toDate?.() ||
-    (value?.seconds
-      ? new Date(value.seconds * 1000)
-      : value
-        ? new Date(value)
-        : new Date());
+    (
+      typeof value?.seconds === "number"
+        ? new Date(value.seconds * 1000)
+        : value
+          ? new Date(value)
+          : new Date()
+    );
 
-  return date.toLocaleDateString('en-UG', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  return date.toLocaleDateString("en-UG", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
   });
-
 };
 
 // ==========================================
@@ -70,32 +79,38 @@ export const fmtDate = value => {
 // ==========================================
 
 export function imageOf(post) {
+  const images = Array.isArray(post?.images)
+    ? post.images
+    : [];
 
-  if (
-    Array.isArray(post?.images) &&
-    post.images.length
-  ) {
-
-    const first = post.images[0];
+  for (const item of images) {
+    const url =
+      typeof item === "string"
+        ? item
+        : (
+            item?.url ||
+            item?.secure_url ||
+            item?.src ||
+            ""
+          );
 
     if (
-      typeof first === 'string' &&
-      first.startsWith('https://')
+      typeof url === "string" &&
+      url.startsWith("https://")
     ) {
-      return first;
+      return url;
     }
-
-    if (
-      typeof first?.url === 'string' &&
-      first.url.startsWith('https://')
-    ) {
-      return first.url;
-    }
-
   }
 
-  return '/assets/placeholder.svg';
+  return "/assets/placeholder.svg";
+}
 
+// ==========================================
+// ARTICLE IDENTIFIER
+// ==========================================
+
+function articleIdentifier(post) {
+  return post?.id || post?.slug || "";
 }
 
 // ==========================================
@@ -103,104 +118,103 @@ export function imageOf(post) {
 // ==========================================
 
 export function articleUrl(post) {
-
-  const identifier = post?.id || post?.slug;
+  const identifier = articleIdentifier(post);
 
   if (!identifier) {
-    return '/';
+    return "/";
   }
 
-  // Local VS Code Live Server does not have
-  // generated /post/ARTICLE_ID/ pages.
+  // Local VS Code Live Server.
 
   if (isLocalDevelopment()) {
-
     return (
-      '/post.html?slug=' +
+      "/post.html?slug=" +
       encodeURIComponent(identifier)
     );
-
   }
 
-  // Public deployment provides article
-  // pages with server-generated OG metadata.
+  // Cloudflare-generated article page.
 
   return (
-    '/post/' +
+    "/post/" +
     encodeURIComponent(identifier) +
-    '/'
+    "/"
   );
-
 }
 
 // ==========================================
-// PUBLIC SHARE LINK
+// PUBLIC ARTICLE SHARING URL
 // ==========================================
 
 export function publicArticleUrl(post) {
-
-  const identifier = post?.id || post?.slug;
+  const identifier = articleIdentifier(post);
 
   if (!identifier) {
-    return PUBLIC_SITE_URL + '/';
+    return PUBLIC_SITE_URL + "/";
   }
 
   return (
     PUBLIC_SITE_URL +
-    '/post/' +
+    "/post/" +
     encodeURIComponent(identifier) +
-    '/'
+    "/"
   );
-
 }
 
 // ==========================================
-// SHARE FUNCTION
+// SHARE ARTICLE
+
+// IMPORTANT:
+// Share only the article URL.
+//
+// The recipient's application retrieves:
+// og:title
+// og:description
+// og:image
+//
+// from the server-generated article HTML.
+//
+// WhatsApp controls the final card layout.
 // ==========================================
 
-export async function share(url, title) {
+export async function share(url, title = "") {
+  if (!url) return;
+
+  // Native sharing on supported devices.
 
   if (navigator.share) {
-
     try {
-
       await navigator.share({
-        title,
         url
       });
 
       return;
-
     } catch (error) {
-
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         return;
       }
 
       console.warn(
-        'Native sharing unavailable:',
+        "Native sharing unavailable:",
         error
       );
-
     }
-
   }
+
+  // Clipboard fallback.
 
   try {
-
     await navigator.clipboard.writeText(url);
 
-    alert('Article link copied successfully.');
-
+    alert(
+      "News article link copied. You can now share it."
+    );
   } catch (error) {
-
     window.prompt(
-      'Copy this article link:',
+      "Copy this news article link:",
       url
     );
-
   }
-
 }
 
 // ==========================================
@@ -208,34 +222,37 @@ export async function share(url, title) {
 // ==========================================
 
 export function card(post, compact = false) {
-
   const wrapper = el(
-    'article',
-    'card' + (compact ? ' compact' : '')
+    "article",
+    "card" + (compact ? " compact" : "")
   );
 
-  const url = articleUrl(post);
+  const articleLink = articleUrl(post);
 
   // ======================================
   // CLICKABLE ARTICLE CONTENT
   // ======================================
 
-  const link = el('a', 'card-link');
+  const link = el("a", "card-link");
 
-  link.href = url;
+  link.href = articleLink;
 
   link.setAttribute(
-    'aria-label',
-    'Read: ' + (post.title || 'News article')
+    "aria-label",
+    "Read: " + (post.title || "News article")
   );
 
-  // MAIN PHOTOGRAPH
+  // ======================================
+  // NEWS PHOTOGRAPH
+  // ======================================
 
-  const image = el('img', 'card-cover');
+  const image = el("img", "card-cover");
 
   image.src = imageOf(post);
-  image.alt = post.title || 'News photograph';
-  image.loading = 'lazy';
+  image.alt = post.title || "News photograph";
+  image.loading = "lazy";
+
+  image.decoding = "async";
 
   link.append(image);
 
@@ -243,52 +260,51 @@ export function card(post, compact = false) {
   // ARTICLE DETAILS
   // ======================================
 
-  const body = el('div', 'card-body');
+  const body = el("div", "card-body");
+
+  // CATEGORY
 
   const category =
-    typeof post.category === 'string'
+    typeof post.category === "string"
       ? post.category.trim()
-      : '';
+      : "";
 
   if (
     category &&
-    category.toLowerCase() !== 'none'
+    category.toLowerCase() !== "none"
   ) {
-
     body.append(
-      el('div', 'category', category)
+      el("div", "category", category)
     );
-
   }
 
   // HEADLINE
 
-  const headline = el(
-    'h3',
-    '',
-    post.title || 'Untitled'
+  body.append(
+    el(
+      "h3",
+      "",
+      post.title || "Untitled"
+    )
   );
 
-  body.append(headline);
-
-  // SHORT ARTICLE DESCRIPTION
+  // DESCRIPTION
 
   if (post.excerpt) {
-
     body.append(
-      el('p', 'summary', post.excerpt)
+      el("p", "summary", post.excerpt)
     );
-
   }
 
   // PUBLICATION DATE
 
   body.append(
     el(
-      'div',
-      'meta',
+      "div",
+      "meta",
       fmtDate(
-        post.publishedAt || post.createdAt
+        post.publishedAt ||
+        post.createdAt
       )
     )
   );
@@ -301,40 +317,33 @@ export function card(post, compact = false) {
   // ======================================
 
   const shareArea = el(
-    'div',
-    'card-share-area'
+    "div",
+    "card-share-area"
   );
 
   const shareButton = el(
-    'button',
-    'card-share-btn',
-    '↗ Share'
+    "button",
+    "card-share-btn",
+    "↗ Share"
   );
 
-  shareButton.type = 'button';
+  shareButton.type = "button";
 
   shareButton.setAttribute(
-    'aria-label',
-    'Share ' + (post.title || 'this article')
+    "aria-label",
+    "Share " +
+      (post.title || "this news article")
   );
 
   shareButton.addEventListener(
-    'click',
+    "click",
     async event => {
-
       event.preventDefault();
       event.stopPropagation();
 
-      // Always share the real public
-      // Cloudflare article URL.
+      const url = publicArticleUrl(post);
 
-      const absoluteUrl = publicArticleUrl(post);
-
-      await share(
-        absoluteUrl,
-        post.title || '#FrankMyMP #FrankMyChoice'
-      );
-
+      await share(url);
     }
   );
 
@@ -342,7 +351,6 @@ export function card(post, compact = false) {
   wrapper.append(shareArea);
 
   return wrapper;
-
 }
 
 // ==========================================
@@ -350,50 +358,44 @@ export function card(post, compact = false) {
 // ==========================================
 
 export function menu() {
+  const button = $("#menuBtn");
+  const nav = $("#nav");
 
-  const button = $('#menuBtn');
-  const nav = $('#nav');
+  button?.addEventListener(
+    "click",
+    () => {
+      if (!nav) return;
 
-  button?.addEventListener('click', () => {
+      const isOpen =
+        nav.classList.toggle("open");
 
-    const isOpen = nav?.classList.toggle('open');
-
-    button.setAttribute(
-      'aria-expanded',
-      String(!!isOpen)
-    );
-
-  });
+      button.setAttribute(
+        "aria-expanded",
+        String(isOpen)
+      );
+    }
+  );
 
   // NRM EMBLEM
 
-  const logo = $('#nrmLogo');
+  const logo = $("#nrmLogo");
 
   if (logo) {
-
     logo.onload = () => {
-
-      logo.classList.remove('hidden');
-
+      logo.classList.remove("hidden");
     };
 
     logo.onerror = () => {
-
-      logo.classList.add('hidden');
-
+      logo.classList.add("hidden");
     };
 
     if (
       logo.complete &&
       logo.naturalWidth > 0
     ) {
-
-      logo.classList.remove('hidden');
-
+      logo.classList.remove("hidden");
     }
-
   }
-
 }
 
 // ==========================================
@@ -401,33 +403,29 @@ export function menu() {
 // ==========================================
 
 export function message(node, text) {
-
   if (!node) return;
 
   node.replaceChildren(
-    el('div', 'empty', text)
+    el("div", "empty", text)
   );
-
 }
 
 // ==========================================
 // ARTICLE PARAGRAPHS
 // ==========================================
 
-export function paragraphs(container, text) {
-
-  const parts = (text || '').split(/\n\s*\n/);
+export function paragraphs(
+  container,
+  text
+) {
+  const parts = String(text || "")
+    .split(/\n\s*\n/);
 
   parts.forEach(part => {
-
     if (part.trim()) {
-
       container.append(
-        el('p', '', part.trim())
+        el("p", "", part.trim())
       );
-
     }
-
   });
-
 }

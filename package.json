@@ -1,1 +1,18 @@
-{"name":"frank-my-mp-my-choice","private":true,"type":"module","scripts":{"build":"node tools/build.mjs"},"dependencies":{"firebase-admin":"^13.0.0"}}
+
+{
+  "name": "frank-my-mp-my-choice",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "News and public updates for #FrankMyMP #FrankMyChoice",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "check": "node --check tools/build.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

@@ -11,7 +11,9 @@
   >
 
   <!-- ======================================
-       APP NAME AND IDENTITY
+       ARTICLE TITLE
+       Replaced by the build system for
+       individual published articles
   ====================================== -->
 
   <title>Article | #FrankMyMP #FrankMyChoice</title>
@@ -20,6 +22,10 @@
     name="description"
     content="Read news and updates from Rwamwanja, Kamwenge, Uganda."
   >
+
+  <!-- ======================================
+       APP IDENTITY
+  ====================================== -->
 
   <meta
     name="theme-color"
@@ -39,6 +45,43 @@
   <meta
     name="apple-mobile-web-app-status-bar-style"
     content="default"
+  >
+
+  <!-- ======================================
+       SOCIAL SHARING FALLBACK
+
+       tools/build.mjs will replace these
+       values when generating article pages.
+
+       og:image = first uploaded photograph
+       og:title = article headline
+       og:description = short excerpt
+       og:url = individual article URL
+  ====================================== -->
+
+  <meta
+    property="og:type"
+    content="article"
+  >
+
+  <meta
+    property="og:site_name"
+    content="#FrankMyMP #FrankMyChoice"
+  >
+
+  <meta
+    property="og:title"
+    content="News Article | #FrankMyMP #FrankMyChoice"
+  >
+
+  <meta
+    property="og:description"
+    content="Latest news and development updates from Rwamwanja, Kamwenge, Uganda."
+  >
+
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
   >
 
   <!-- ======================================
@@ -66,7 +109,7 @@
   >
 
   <!-- ======================================
-       APPLE / IPHONE APP ICON
+       IPHONE HOME-SCREEN ICON
   ====================================== -->
 
   <link
@@ -102,9 +145,11 @@
   ====================================== -->
 
   <div class="topbar">
+
     <div class="wrap location-bar">
       RWAMWANJA • KAMWENGE • UGANDA
     </div>
+
   </div>
 
   <!-- ======================================
@@ -115,7 +160,7 @@
 
     <div class="wrap header-inner">
 
-      <!-- Brand / Trademark -->
+      <!-- BRAND -->
 
       <a href="/" class="brand">
 
@@ -129,15 +174,21 @@
 
       </a>
 
-      <!-- Navigation -->
+      <!-- NAVIGATION -->
 
       <div class="row">
 
-        <a href="/" class="pill">
+        <a
+          href="/"
+          class="pill"
+        >
           ← All News
         </a>
 
-        <a href="/admin/" class="pill">
+        <a
+          href="/admin/"
+          class="pill"
+        >
           Admin
         </a>
 
@@ -153,10 +204,14 @@
 
   <main class="post-main">
 
+    <!-- FIREBASE ARTICLE CONTENT -->
+
     <div id="article">
+
       <div class="empty">
         Loading article…
       </div>
+
     </div>
 
     <!-- ====================================
@@ -168,7 +223,9 @@
       aria-label="Share this article"
     >
 
-      <h2>Share This Article</h2>
+      <h2>
+        Share This Article
+      </h2>
 
       <p class="muted">
         Forward this news story to friends and family.
@@ -176,7 +233,7 @@
 
       <div class="share-buttons">
 
-        <!-- WhatsApp -->
+        <!-- WHATSAPP -->
 
         <a
           id="shareWhatsApp"
@@ -188,7 +245,7 @@
           WhatsApp
         </a>
 
-        <!-- Facebook -->
+        <!-- FACEBOOK -->
 
         <a
           id="shareFacebook"
@@ -212,7 +269,7 @@
           X
         </a>
 
-        <!-- Copy link -->
+        <!-- COPY ARTICLE LINK -->
 
         <button
           id="copyArticleLink"
@@ -239,27 +296,31 @@
 
     <section class="comments">
 
-      <h2>Reader Comments</h2>
+      <h2>
+        Reader Comments
+      </h2>
 
       <p class="muted">
         Comments are reviewed before being displayed.
         Please keep your contribution respectful and factual.
       </p>
 
-      <!-- Approved comments -->
+      <!-- APPROVED COMMENTS -->
 
       <div id="comments"></div>
 
-      <h3>Leave a comment</h3>
+      <h3>
+        Leave a comment
+      </h3>
 
-      <!-- Comment submission form -->
+      <!-- COMMENT SUBMISSION FORM -->
 
       <form
         class="form"
         id="commentForm"
       >
 
-        <!-- Reader name -->
+        <!-- READER NAME -->
 
         <label for="commentName">
           Your name
@@ -275,7 +336,7 @@
           required
         >
 
-        <!-- Reader comment -->
+        <!-- COMMENT -->
 
         <label for="commentText">
           Comment
@@ -289,7 +350,7 @@
           required
         ></textarea>
 
-        <!-- Spam protection -->
+        <!-- HONEYPOT SPAM PROTECTION -->
 
         <div
           class="hidden"
@@ -310,7 +371,7 @@
 
         </div>
 
-        <!-- Submit -->
+        <!-- SUBMIT COMMENT -->
 
         <button
           class="btn"
@@ -319,7 +380,7 @@
           Submit for approval
         </button>
 
-        <!-- Submission status -->
+        <!-- STATUS MESSAGE -->
 
         <p
           id="commentStatus"
@@ -355,7 +416,14 @@
   </footer>
 
   <!-- ======================================
-       ARTICLE APPLICATION
+       ARTICLE JAVASCRIPT
+
+       Handles:
+       - Fetching news from Firebase
+       - Loading article photographs
+       - Displaying comments
+       - Article visit counting
+       - WhatsApp/Facebook/X sharing
   ====================================== -->
 
   <script

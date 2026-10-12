@@ -10,7 +10,9 @@
     content="width=device-width, initial-scale=1"
   >
 
-  <!-- APP NAME -->
+  <!-- ======================================
+       APP NAME
+  ====================================== -->
 
   <title>
     #FrankMyMP #FrankMyChoice | News & Updates
@@ -18,7 +20,7 @@
 
   <meta
     name="description"
-    content="Latest news, public statements, achievements and evidence-based clarifications relating to Hon. Frank Tumwebaze. Rwamwanja, Kamwenge, Uganda."
+    content="Latest news and development updates from Rwamwanja, Kamwenge, Uganda."
   >
 
   <meta name="theme-color" content="#FFD800">
@@ -38,7 +40,31 @@
     content="default"
   >
 
-  <!-- SOCIAL SHARING -->
+  <!-- ======================================
+       SOCIAL MEDIA SHARING
+
+       These are fallback values.
+
+       During deployment, tools/build.mjs
+       replaces them with metadata from the
+       latest published news article.
+
+       Photograph: first uploaded image
+       Title: article headline
+       Description: short article excerpt
+
+       WhatsApp reads server-generated HTML.
+  ====================================== -->
+
+  <meta
+    property="og:type"
+    content="website"
+  >
+
+  <meta
+    property="og:site_name"
+    content="#FrankMyMP #FrankMyChoice"
+  >
 
   <meta
     property="og:title"
@@ -47,17 +73,22 @@
 
   <meta
     property="og:description"
-    content="Latest news and public updates from Rwamwanja, Kamwenge, Uganda."
+    content="Latest news and development updates from Rwamwanja, Kamwenge, Uganda."
   >
-
-  <meta property="og:type" content="website">
 
   <meta
-    property="og:site_name"
-    content="#FrankMyMP #FrankMyChoice"
+    property="og:url"
+    content="https://frankmymp-frankmychoice.pages.dev/"
   >
 
-  <!-- ICONS -->
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  >
+
+  <!-- ======================================
+       BROWSER FAVICONS
+  ====================================== -->
 
   <link
     rel="icon"
@@ -79,29 +110,40 @@
     href="/assets/icons/favicon-16.png"
   >
 
+  <!-- ======================================
+       IPHONE APP ICON
+  ====================================== -->
+
   <link
     rel="apple-touch-icon"
     sizes="180x180"
     href="/assets/icons/apple-touch-icon.png"
   >
 
-  <!-- PWA MANIFEST -->
+  <!-- ======================================
+       PWA MANIFEST
+  ====================================== -->
 
   <link
     rel="manifest"
     href="/manifest.webmanifest"
   >
 
-  <!-- STYLESHEET -->
+  <!-- ======================================
+       MAIN STYLESHEET
+  ====================================== -->
 
   <link
     rel="stylesheet"
     href="/css/style.css"
   >
 
-  <!-- INSTALL BUTTON STYLING -->
+  <!-- ======================================
+       INSTALL APP BUTTON STYLES
+  ====================================== -->
 
   <style>
+
     .install-app-btn {
       display: inline-flex;
       align-items: center;
@@ -118,6 +160,7 @@
       line-height: 1.2;
       cursor: pointer;
       white-space: nowrap;
+
       transition:
         transform 0.2s ease,
         background 0.2s ease;
@@ -146,11 +189,14 @@
       max-width: 420px;
       margin: 0 auto;
       padding: 18px;
+
       border: 1px solid #e0c450;
       border-radius: 16px;
       background: #ffffff;
       color: #151515;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.2);
     }
 
     .install-notice[hidden] {
@@ -175,11 +221,14 @@
     }
 
     @media (max-width: 600px) {
+
       .install-app-btn {
         font-size: 12px;
         padding: 10px 13px;
       }
+
     }
+
   </style>
 
 </head>
@@ -191,20 +240,26 @@
   ====================================== -->
 
   <div class="topbar">
+
     <div class="wrap location-bar">
+
       <span>
         RWAMWANJA • KAMWENGE • UGANDA
       </span>
+
     </div>
+
   </div>
 
   <!-- ======================================
-       HEADER
+       WEBSITE HEADER
   ====================================== -->
 
   <header class="header">
 
     <div class="wrap header-inner">
+
+      <!-- BRAND -->
 
       <a
         href="/"
@@ -212,16 +267,17 @@
         aria-label="#FrankMyMP #FrankMyChoice Homepage"
       >
 
-        <!-- NRM EMBLEM -->
+        <!-- OPTIONAL NRM EMBLEM -->
 
         <img
           class="nrm-mark hidden"
           id="nrmLogo"
           src="/assets/nrm-logo.png"
           alt="NRM emblem"
+          onerror="this.hidden=true;this.style.display='none';"
         >
 
-        <!-- BRAND TRADEMARK -->
+        <!-- TRADEMARK -->
 
         <div class="brand">
 
@@ -237,7 +293,7 @@
 
       </a>
 
-      <!-- MOBILE MENU BUTTON -->
+      <!-- MOBILE MENU -->
 
       <button
         class="nav-toggle"
@@ -250,7 +306,7 @@
         ☰
       </button>
 
-      <!-- MAIN NAVIGATION -->
+      <!-- NAVIGATION -->
 
       <nav
         class="nav"
@@ -273,12 +329,20 @@
           title="Approximate recorded site visits"
           aria-label="Recorded site visits"
         >
-          <span aria-hidden="true">◉</span>
+
+          <span aria-hidden="true">
+            ◉
+          </span>
+
           Views:
-          <strong id="visitors">—</strong>
+
+          <strong id="visitors">
+            —
+          </strong>
+
         </span>
 
-        <!-- INSTALL APP BUTTON -->
+        <!-- INSTALL APP -->
 
         <button
           id="installAppBtn"
@@ -286,8 +350,13 @@
           type="button"
           aria-label="Install FrankMyMP application"
         >
-          <span aria-hidden="true">↓</span>
+
+          <span aria-hidden="true">
+            ↓
+          </span>
+
           Install App
+
         </button>
 
         <!-- ADMIN -->
@@ -306,7 +375,7 @@
   </header>
 
   <!-- ======================================
-       INSTALLATION INFORMATION
+       INSTALL APP INFORMATION
   ====================================== -->
 
   <div
@@ -334,12 +403,14 @@
   </div>
 
   <!-- ======================================
-       MAIN CONTENT
+       MAIN WEBSITE CONTENT
   ====================================== -->
 
   <main>
 
-    <!-- ANIMATED NEWS TICKER -->
+    <!-- ====================================
+         ANIMATED NEWS TICKER
+    ===================================== -->
 
     <section
       class="wrap ticker-wrap"
@@ -364,7 +435,9 @@
 
     </section>
 
-    <!-- FEATURED STORIES -->
+    <!-- ====================================
+         FEATURED STORIES
+    ===================================== -->
 
     <section class="wrap section">
 
@@ -383,18 +456,24 @@
 
       </div>
 
+      <!-- FIREBASE FEATURED ARTICLES -->
+
       <div
         id="featured"
         class="feature-grid"
       >
+
         <div class="empty">
           Loading featured news…
         </div>
+
       </div>
 
     </section>
 
-    <!-- LATEST NEWS -->
+    <!-- ====================================
+         LATEST NEWS
+    ===================================== -->
 
     <section
       class="wrap section"
@@ -455,15 +534,17 @@
 
       </div>
 
-      <!-- NEWS CARDS -->
+      <!-- NEWS ARTICLES FROM FIREBASE -->
 
       <div
         id="news"
         class="news-grid"
       >
+
         <div class="empty">
           Loading news…
         </div>
+
       </div>
 
       <!-- LOAD MORE -->
@@ -490,6 +571,8 @@
 
       <div>
 
+        <!-- TRADEMARK -->
+
         <div class="brand">
 
           <span>
@@ -510,12 +593,16 @@
 
       <div class="subtle">
 
-        Public information platform. Statements and
-        reports are attributed to their sources.
+        Public information platform.
+        Statements and reports are
+        attributed to their sources.
 
         <p>
+
           © <span id="year"></span>
+
           #FrankMyMP #FrankMyChoice
+
         </p>
 
       </div>
@@ -524,14 +611,18 @@
 
   </footer>
 
-  <!-- NEWS APPLICATION -->
+  <!-- ======================================
+       FIREBASE NEWS APPLICATION
+  ====================================== -->
 
   <script
     type="module"
     src="/js/home.js"
   ></script>
 
-  <!-- INSTALLATION APPLICATION -->
+  <!-- ======================================
+       PWA INSTALLATION
+  ====================================== -->
 
   <script
     defer

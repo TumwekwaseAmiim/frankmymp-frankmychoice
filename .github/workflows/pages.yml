@@ -1,38 +1,94 @@
-name: Publish news website
+
+# =====================================================
+# #FrankMyMP #FrankMyChoice
+# Cloudflare Pages News Preview Build Checks
+#
+# Public hosting: Cloudflare Pages
+# News database: Firebase Firestore
+# Photographs: Cloudinary
+# =====================================================
+
+name: Verify Frank News Website
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
   workflow_dispatch:
-  schedule:
-    - cron: '*/15 * * * *'
+
 permissions:
   contents: read
-  pages: write
-  id-token: write
+
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: frank-news-verification
+  cancel-in-progress: true
+
 jobs:
-  deploy:
+  verify:
+    name: Verify website build
+
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      # ==========================================
+      # CHECK OUT REPOSITORY
+      # ==========================================
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # ==========================================
+      # NODE.JS
+      # ==========================================
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - name: Generate article preview pages
-        run: npm run build
-        env:
-          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          node-version: "22"
+
+      # ==========================================
+      # DEPENDENCIES
+      # ==========================================
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      # ==========================================
+      # VERIFY JAVASCRIPT
+      # ==========================================
+
+      - name: Check news build script
+        run: node --check tools/build.mjs
+
+      - name: Check public interface scripts
+        run: |
+          node --check js/ui.js
+          node --check js/home.js
+          node --check js/post.js
+          node --check js/config.js
+          node --check js/install.js
+
+      # ==========================================
+      # CONFIRM WEBSITE FILES
+      # ==========================================
+
+      - name: Check essential website files
+        run: |
+          test -f index.html
+          test -f post.html
+          test -f manifest.webmanifest
+          test -f css/style.css
+          test -f js/home.js
+          test -f js/post.js
+          test -f tools/build.mjs
+
+      # ==========================================
+      # SUCCESS
+      # ==========================================
+
+      - name: Verification complete
+        run: |
+          echo "Frank News website checks completed."
+          echo "Cloudflare Pages handles deployment."

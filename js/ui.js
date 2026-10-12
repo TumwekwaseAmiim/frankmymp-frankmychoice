@@ -12,6 +12,7 @@ export const $ = (selector, root = document) =>
   root.querySelector(selector);
 
 export function el(tag, className = '', text = '') {
+
   const node = document.createElement(tag);
 
   if (className) {
@@ -26,10 +27,28 @@ export function el(tag, className = '', text = '') {
 }
 
 // ==========================================
+// WEBSITE CONFIGURATION
+// ==========================================
+
+const PUBLIC_SITE_URL =
+  'https://frankmymp-frankmychoice.pages.dev';
+
+function isLocalDevelopment() {
+
+  return (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '0.0.0.0'
+  );
+
+}
+
+// ==========================================
 // DATE FORMATTING
 // ==========================================
 
 export const fmtDate = value => {
+
   const date =
     value?.toDate?.() ||
     (value?.seconds
@@ -43,6 +62,7 @@ export const fmtDate = value => {
     month: 'short',
     day: 'numeric'
   });
+
 };
 
 // ==========================================
@@ -50,30 +70,88 @@ export const fmtDate = value => {
 // ==========================================
 
 export function imageOf(post) {
-  return (
-    Array.isArray(post.images) &&
-    post.images[0]?.url
-  )
-    ? post.images[0].url
-    : '/assets/placeholder.svg';
+
+  if (
+    Array.isArray(post?.images) &&
+    post.images.length
+  ) {
+
+    const first = post.images[0];
+
+    if (
+      typeof first === 'string' &&
+      first.startsWith('https://')
+    ) {
+      return first;
+    }
+
+    if (
+      typeof first?.url === 'string' &&
+      first.url.startsWith('https://')
+    ) {
+      return first.url;
+    }
+
+  }
+
+  return '/assets/placeholder.svg';
+
 }
 
 // ==========================================
-// PUBLIC ARTICLE LINKS
-// Works with VS Code Live Server
+// ARTICLE LINK GENERATION
 // ==========================================
 
 export function articleUrl(post) {
-  const identifier = post.id || post.slug;
+
+  const identifier = post?.id || post?.slug;
 
   if (!identifier) {
     return '/';
   }
 
+  // Local VS Code Live Server does not have
+  // generated /post/ARTICLE_ID/ pages.
+
+  if (isLocalDevelopment()) {
+
+    return (
+      '/post.html?slug=' +
+      encodeURIComponent(identifier)
+    );
+
+  }
+
+  // Public deployment provides article
+  // pages with server-generated OG metadata.
+
   return (
-    '/post.html?slug=' +
-    encodeURIComponent(identifier)
+    '/post/' +
+    encodeURIComponent(identifier) +
+    '/'
   );
+
+}
+
+// ==========================================
+// PUBLIC SHARE LINK
+// ==========================================
+
+export function publicArticleUrl(post) {
+
+  const identifier = post?.id || post?.slug;
+
+  if (!identifier) {
+    return PUBLIC_SITE_URL + '/';
+  }
+
+  return (
+    PUBLIC_SITE_URL +
+    '/post/' +
+    encodeURIComponent(identifier) +
+    '/'
+  );
+
 }
 
 // ==========================================
@@ -83,7 +161,9 @@ export function articleUrl(post) {
 export async function share(url, title) {
 
   if (navigator.share) {
+
     try {
+
       await navigator.share({
         title,
         url
@@ -92,6 +172,7 @@ export async function share(url, title) {
       return;
 
     } catch (error) {
+
       if (error.name === 'AbortError') {
         return;
       }
@@ -100,20 +181,26 @@ export async function share(url, title) {
         'Native sharing unavailable:',
         error
       );
+
     }
+
   }
 
   try {
+
     await navigator.clipboard.writeText(url);
 
     alert('Article link copied successfully.');
 
   } catch (error) {
+
     window.prompt(
       'Copy this article link:',
       url
     );
+
   }
+
 }
 
 // ==========================================
@@ -142,7 +229,8 @@ export function card(post, compact = false) {
     'Read: ' + (post.title || 'News article')
   );
 
-  // Main photograph
+  // MAIN PHOTOGRAPH
+
   const image = el('img', 'card-cover');
 
   image.src = imageOf(post);
@@ -162,17 +250,19 @@ export function card(post, compact = false) {
       ? post.category.trim()
       : '';
 
-  // Hide None category
   if (
     category &&
     category.toLowerCase() !== 'none'
   ) {
+
     body.append(
       el('div', 'category', category)
     );
+
   }
 
-  // Headline
+  // HEADLINE
+
   const headline = el(
     'h3',
     '',
@@ -181,14 +271,18 @@ export function card(post, compact = false) {
 
   body.append(headline);
 
-  // Caption
+  // SHORT ARTICLE DESCRIPTION
+
   if (post.excerpt) {
+
     body.append(
       el('p', 'summary', post.excerpt)
     );
+
   }
 
-  // Publication date
+  // PUBLICATION DATE
+
   body.append(
     el(
       'div',
@@ -231,10 +325,10 @@ export function card(post, compact = false) {
       event.preventDefault();
       event.stopPropagation();
 
-      const absoluteUrl = new URL(
-        url,
-        window.location.origin
-      ).href;
+      // Always share the real public
+      // Cloudflare article URL.
+
+      const absoluteUrl = publicArticleUrl(post);
 
       await share(
         absoluteUrl,
@@ -248,6 +342,7 @@ export function card(post, compact = false) {
   wrapper.append(shareArea);
 
   return wrapper;
+
 }
 
 // ==========================================
@@ -270,26 +365,35 @@ export function menu() {
 
   });
 
-  // NRM emblem
+  // NRM EMBLEM
+
   const logo = $('#nrmLogo');
 
   if (logo) {
 
     logo.onload = () => {
+
       logo.classList.remove('hidden');
+
     };
 
     logo.onerror = () => {
+
       logo.classList.add('hidden');
+
     };
 
     if (
       logo.complete &&
       logo.naturalWidth > 0
     ) {
+
       logo.classList.remove('hidden');
+
     }
+
   }
+
 }
 
 // ==========================================
@@ -303,6 +407,7 @@ export function message(node, text) {
   node.replaceChildren(
     el('div', 'empty', text)
   );
+
 }
 
 // ==========================================
@@ -316,10 +421,13 @@ export function paragraphs(container, text) {
   parts.forEach(part => {
 
     if (part.trim()) {
+
       container.append(
         el('p', '', part.trim())
       );
+
     }
 
   });
+
 }

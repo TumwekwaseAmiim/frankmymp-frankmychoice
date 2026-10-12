@@ -28,17 +28,18 @@ export const FUNCTIONS_REGION = "us-central1";
 // CLOUDINARY PHOTO STORAGE
 // ==========================================
 
-// Your actual Cloudinary Cloud Name
+// Public Cloudinary Cloud Name.
+// Private API credentials stay in Cloudflare.
 export const CLOUDINARY_CLOUD_NAME = "qlxhf4mv";
 
 // ==========================================
-// CLOUDFLARE WORKERS WEBSITE
+// PUBLIC WEBSITE URL
 // ==========================================
 
-// Planned public website address.
-// Must be deployed before public sharing works.
+// Live Cloudflare Pages website.
+// Used for public article links and sharing.
 export const SITE_URL =
-  "https://frankmymp-frankmychoice.tumwekwaseamiim.workers.dev";
+  "https://frankmymp-frankmychoice.pages.dev";
 
 // ==========================================
 // WEBSITE IDENTITY
